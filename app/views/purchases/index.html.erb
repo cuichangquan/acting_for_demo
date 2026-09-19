@@ -1,0 +1,4 @@
+<h1>Executed Purchases</h1><p>Only requests with an <strong>ALLOW</strong> decision appear here.</p>
+<div class="table-wrap"><table><thead><tr><th>Timestamp</th><th>Principal</th><th>Product</th><th>Amount</th></tr></thead><tbody>
+<% @purchases.each do |purchase| %><tr><td><%= purchase.created_at.to_fs(:long) %></td><td><%= purchase.user.name %></td><td><%= purchase.product.name %></td><td><%= number_to_currency(purchase.amount, unit: "¥", precision: 0) %></td></tr><% end %>
+</tbody></table></div><p class="empty"><%= "No purchases executed yet." if @purchases.empty? %></p>

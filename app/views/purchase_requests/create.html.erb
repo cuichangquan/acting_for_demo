@@ -1,0 +1,15 @@
+<% status = @result.decision.status.to_s %>
+<section class="result-card <%= status %>">
+  <p class="eyebrow">Authorization result</p><h1><%= status.tr("_", " ").upcase %></h1>
+  <dl>
+    <dt>Principal</dt><dd><%= @result.principal.name %></dd>
+    <dt>Agent</dt><dd><%= @result.agent.name %></dd>
+    <dt>Action</dt><dd>purchase</dd>
+    <dt>Product</dt><dd><%= @result.product.name %></dd>
+    <dt>Trusted Amount</dt><dd><%= number_to_currency(@result.product.price, unit: "¥", precision: 0) %></dd>
+    <dt>ActingFor Decision</dt><dd><strong><%= status.tr("_", " ").upcase %></strong></dd>
+    <dt>Purchase</dt><dd><strong><%= @result.purchase ? "EXECUTED" : "NOT EXECUTED" %></strong></dd>
+  </dl>
+  <% if @result.decision.approval_required? %><p class="notice">Human approval workflow belongs to the host application. This demo intentionally stops before execution.</p><% end %>
+</section>
+<p><%= link_to "Try another product", root_path, class: "button secondary" %></p>

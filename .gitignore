@@ -1,0 +1,17 @@
+/.bundle
+/.env*
+/.idea
+/.vscode
+/config/credentials/*.key
+/config/master.key
+/coverage
+/log/*
+/storage/*
+/tmp/*
+/vendor/bundle
+!/log/.keep
+!/storage/.keep
+!/tmp/.keep
+!/tmp/pids/.keep
+*.dump
+*.sqlite3

@@ -1,0 +1,4 @@
+<h1>ActingFor Audit Events</h1><p>Automatic authorization audit, newest first. Only explicitly selected context is stored.</p>
+<div class="table-wrap"><table><thead><tr><th>Timestamp</th><th>Agent</th><th>Principal</th><th>Action</th><th>Decision</th><th>Resource</th><th>Reason</th><th>Matched delegations</th><th>Sanitized context</th></tr></thead><tbody>
+<% @audit_events.each do |event| %><tr><td><%= event.created_at.to_fs(:long) %></td><td><%= event.agent_identifier %></td><td><%= "#{event.principal_type}##{event.principal_id}" %></td><td><%= event.action %></td><td><span class="badge <%= event.decision %>"><%= event.decision.tr("_", " ").upcase %></span></td><td><%= [event.resource_type, event.resource_id].compact.join("#") %></td><td><%= event.reason_code %></td><td><%= event.matched_delegation_ids.to_json %></td><td><%= event.sanitized_context.to_json %></td></tr><% end %>
+</tbody></table></div>

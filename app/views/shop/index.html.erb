@@ -1,0 +1,28 @@
+<section class="hero">
+  <p class="eyebrow">Delegated authorization, running in Rails</p>
+  <h1>ActingFor Shopping Demo</h1>
+  <p>See an agent request purchases under authority delegated by a human principal.</p>
+</section>
+<section class="identity-grid">
+  <article><span>Principal</span><strong><%= @principal.name %></strong></article>
+  <article><span>Agent</span><strong><%= @agent.name %></strong></article>
+</section>
+<section>
+  <h2>Delegated authority</h2>
+  <div class="rule-grid">
+    <article class="allow"><strong>≤ ¥1,000</strong><span>ALLOW</span></article>
+    <article class="approval"><strong>¥1,001–¥3,000</strong><span>REQUIRE APPROVAL</span></article>
+    <article class="deny"><strong>&gt; ¥3,000</strong><span>DENY</span><small>Fail closed: no matching delegation</small></article>
+  </div>
+</section>
+<section>
+  <h2>Products</h2>
+  <div class="product-grid">
+    <% @products.each do |product| %>
+      <article class="product-card"><h3><%= product.name %></h3>
+        <p class="price"><%= number_to_currency(product.price, unit: "¥", precision: 0) %></p>
+        <%= button_to "Purchase as Shopping Agent", purchase_requests_path, params: { product_id: product.id }, class: "button" %>
+      </article>
+    <% end %>
+  </div>
+</section>

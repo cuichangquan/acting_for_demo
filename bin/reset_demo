@@ -1,0 +1,8 @@
+#!/usr/bin/env ruby
+require "fileutils"
+
+APP_ROOT = File.expand_path("..", __dir__)
+FileUtils.chdir(APP_ROOT) do
+  abort "Refusing to reset in production" if ENV["RAILS_ENV"] == "production"
+  system("bin/rails db:drop db:create db:migrate db:seed", exception: true)
+end
