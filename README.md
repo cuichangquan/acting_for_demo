@@ -53,6 +53,8 @@ docker compose up
 
 Open <http://localhost:3000>. `app` connects to the Compose `db` service; it does not use a PostgreSQL server on the Mac.
 
+For optional database inspection from the Mac (for example, with TablePlus), use host `127.0.0.1`, port `5432`, user `postgres`, password `demo_password_not_for_production`, database `acting_for_demo_development`, and disable SSL. This development-only credential is defined by Compose and must not be reused outside this demo.
+
 The build uses BuildKit SSH forwarding to fetch the exact private ActingFor commit. Start your SSH agent and add an authorized key before building. The key is forwarded only during `bundle install`; it is not copied into the image. No host-global Git rewrite is required.
 
 ```sh
