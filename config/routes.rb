@@ -1,6 +1,10 @@
 Rails.application.routes.draw do
   root "shop#index"
   post "purchase_requests", to: "purchase_requests#create"
+  post "human_purchases", to: "human_purchases#create"
+  resource :delegation_settings, only: [:show, :update] do
+    post :reset
+  end
   resources :purchases, only: :index
   resources :audit_events, only: :index
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html

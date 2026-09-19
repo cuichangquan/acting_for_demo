@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_09_19_002017) do
+ActiveRecord::Schema[8.0].define(version: 2026_09_19_020000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -72,8 +72,10 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_19_002017) do
     t.integer "amount"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "source", default: "shopping_agent", null: false
     t.index ["product_id"], name: "index_purchases_on_product_id"
     t.index ["user_id"], name: "index_purchases_on_user_id"
+    t.check_constraint "source::text = ANY (ARRAY['human'::character varying, 'shopping_agent'::character varying]::text[])", name: "chk_purchases_source"
   end
 
   create_table "users", force: :cascade do |t|

@@ -1,0 +1,34 @@
+<section class="hero">
+  <p class="eyebrow">Host application example</p>
+  <h1>Delegation Settings</h1>
+  <p>This is a settings screen built by this Rails host application using ActingFor's public API. ActingFor v0.1 does not provide an admin UI.</p>
+</section>
+
+<section class="identity-grid">
+  <article><span>Principal</span><strong><%= @principal.name %></strong></article>
+  <article><span>Agent</span><strong><%= @agent.name %></strong></article>
+  <article><span>Action</span><strong>purchase</strong></article>
+  <article><span>Resource</span><strong>Product</strong></article>
+</section>
+
+<section class="settings-card">
+  <h2>Delegated purchase limits</h2>
+  <% if @error %><p class="form-error"><%= @error %></p><% end %>
+  <%= form_with url: delegation_settings_path, method: :patch, scope: :delegation_settings do |form| %>
+    <div class="field">
+      <%= form.label :allow_max, "Allow automatically up to" %>
+      <div class="money-input"><span>¥</span><%= form.number_field :allow_max, value: params.dig(:delegation_settings, :allow_max) || @settings.allow_max, min: 0, step: 1, required: true %></div>
+    </div>
+    <div class="field">
+      <%= form.label :approval_max, "Require approval up to" %>
+      <div class="money-input"><span>¥</span><%= form.number_field :approval_max, value: params.dig(:delegation_settings, :approval_max) || @settings.approval_max, min: 1, step: 1, required: true %></div>
+    </div>
+    <p>Amounts above the approval maximum have no matching Delegation and are denied closed.</p>
+    <%= form.submit "Save Delegation Settings", class: "button" %>
+  <% end %>
+
+  <hr>
+  <h3>Demo defaults</h3>
+  <p>Allow through ¥1,000; require approval through ¥3,000; deny higher amounts.</p>
+  <%= button_to "Reset to Demo Defaults", reset_delegation_settings_path, class: "button danger-button", data: { turbo_confirm: "Reset the delegation limits?" } %>
+</section>

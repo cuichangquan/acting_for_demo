@@ -2,6 +2,8 @@
 
 This checklist is intentionally uncompleted. Automated test success is not human verification.
 
+Status: **NOT YET COMPLETED**
+
 ## Environment Record
 
 ```text
@@ -128,3 +130,43 @@ result = ShoppingAgentPurchase.call(product_id: Product.find_by!(price: 800).id,
 ```
 
 Expect `[:deny, nil]` and a new AuditEvent. Record PASS/FAIL `[ ]`. Restore with `docker compose run --rm app bin/reset_demo`.
+
+## Scenario 9: direct human purchases
+
+Use **Buy as Demo User** for each product.
+
+```text
+¥800:  Expected Purchase: created  Actual: [ ]
+¥2,000: Expected Purchase: created  Actual: [ ]
+¥5,000: Expected Purchase: created  Actual: [ ]
+ActingFor AuditEvent count before: [ ]
+ActingFor AuditEvent count after:  [ ]
+Expected audit count change: 0
+PASS / FAIL: [ ]
+```
+
+Confirm the result says `ActingFor: NOT INVOLVED`, and Purchases identifies each row as `HUMAN`.
+
+## Scenario 10: change delegated authority
+
+Open **Delegation Settings** and change `1000 / 3000` to `2500 / 6000`. Confirm Shop displays the new limits, then ask the Shopping Agent to buy:
+
+```text
+¥2,000 Expected: ALLOW, Purchase created, Audit created
+Actual: [ ]
+¥5,000 Expected: REQUIRE APPROVAL, Purchase not created, Audit created
+Actual: [ ]
+PASS / FAIL: [ ]
+```
+
+## Scenario 11: reset delegated authority
+
+Click **Reset to Demo Defaults** and confirm the settings and Shop return to `1000 / 3000`.
+
+```text
+¥2,000 Expected: REQUIRE APPROVAL, Purchase not created
+Actual: [ ]
+¥5,000 Expected: DENY, Purchase not created
+Actual: [ ]
+PASS / FAIL: [ ]
+```

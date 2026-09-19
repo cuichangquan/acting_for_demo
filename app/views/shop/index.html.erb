@@ -1,19 +1,20 @@
 <section class="hero">
   <p class="eyebrow">Delegated authorization, running in Rails</p>
   <h1>ActingFor Shopping Demo</h1>
-  <p>See an agent request purchases under authority delegated by a human principal.</p>
+  <p>Compare a human's direct action with an agent acting only under delegated authority.</p>
 </section>
 <section class="identity-grid">
   <article><span>Principal</span><strong><%= @principal.name %></strong></article>
   <article><span>Agent</span><strong><%= @agent.name %></strong></article>
 </section>
 <section>
-  <h2>Delegated authority</h2>
+  <h2>Current delegated authority</h2>
   <div class="rule-grid">
-    <article class="allow"><strong>≤ ¥1,000</strong><span>ALLOW</span></article>
-    <article class="approval"><strong>¥1,001–¥3,000</strong><span>REQUIRE APPROVAL</span></article>
-    <article class="deny"><strong>&gt; ¥3,000</strong><span>DENY</span><small>Fail closed: no matching delegation</small></article>
+    <article class="allow"><strong>≤ <%= number_to_currency(@delegation_settings.allow_max, unit: "¥", precision: 0) %></strong><span>ALLOW</span></article>
+    <article class="approval"><strong><%= number_to_currency(@delegation_settings.allow_max + 1, unit: "¥", precision: 0) %>–<%= number_to_currency(@delegation_settings.approval_max, unit: "¥", precision: 0) %></strong><span>REQUIRE APPROVAL</span></article>
+    <article class="deny"><strong>&gt; <%= number_to_currency(@delegation_settings.approval_max, unit: "¥", precision: 0) %></strong><span>DENY</span><small>Fail closed: no matching delegation</small></article>
   </div>
+  <p><%= link_to "Change the host application's delegation example", delegation_settings_path %></p>
 </section>
 <section>
   <h2>Products</h2>
@@ -21,7 +22,10 @@
     <% @products.each do |product| %>
       <article class="product-card"><h3><%= product.name %></h3>
         <p class="price"><%= number_to_currency(product.price, unit: "¥", precision: 0) %></p>
-        <%= button_to "Purchase as Shopping Agent", purchase_requests_path, params: { product_id: product.id }, class: "button" %>
+        <div class="purchase-actions">
+          <div><small>Direct Human Action</small><%= button_to "Buy as Demo User", human_purchases_path, params: { product_id: product.id }, class: "button human-button" %></div>
+          <div><small>Delegated Agent Action</small><%= button_to "Ask Shopping Agent to Buy", purchase_requests_path, params: { product_id: product.id }, class: "button" %></div>
+        </div>
       </article>
     <% end %>
   </div>

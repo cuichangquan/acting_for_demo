@@ -32,25 +32,29 @@ Problems found through demo integration are reported back to ActingFor as issues
 - A Context Trust Boundary: the host loads `Product#price` from PostgreSQL
 - A Host Business Logic Boundary: only `decision.allowed?` creates a `Purchase`
 - Automatic ActingFor authorization audit
+- Direct human purchases compared with delegated-agent purchases
+- A host-built Delegation Settings screen using ActingFor's public API
 
 ```text
-Principal
-   ↓ delegates
-Shopping Agent
-   ↓ requests :purchase
-Rails Host Application
-   ↓ loads trusted Product data
-ActingFor
-   ↓ allow / require_approval / deny
-Host Business Logic
-   ↓ Purchase or Stop
+Human direct path                 Delegated agent path
+
+Human                             Human
+  ↓ Host authorization              ↓ delegates
+Host Business Logic               Shopping Agent
+  ↓ Purchase                         ↓ Host authorization + ActingFor
+                                  Host Business Logic
+                                    ↓ Purchase or Stop
 ```
 
-| Product price | Decision | Host result |
+| Product price | Human direct purchase | Shopping Agent purchase |
 | ---: | --- | --- |
-| ¥800 | ALLOW | Purchase executed |
-| ¥2,000 | REQUIRE APPROVAL | Purchase not executed |
-| ¥5,000 | DENY (fail closed) | Purchase not executed |
+| ¥800 | Purchase executed | ALLOW → Purchase executed |
+| ¥2,000 | Purchase executed | REQUIRE APPROVAL → Not executed |
+| ¥5,000 | Purchase executed | DENY (fail closed) → Not executed |
+
+The Human buttons intentionally do not call `ActingFor.authorize` and do not create `ActingFor::AuditEvent` records. The demo assumes Demo User has host permission for every product; a production application must perform its own authorization for direct human actions.
+
+The browser-accessible Delegation Settings screen changes the two demo limits and shows how delegated authority changes agent outcomes. It revokes existing demo Delegations and creates replacements through `ActingFor.delegate` in a database transaction. It is an example UI owned by this host Rails application—not an admin UI supplied by ActingFor v0.1.
 
 ## Requirements
 
@@ -99,6 +103,7 @@ Stop containers without deleting database data using `docker compose down`. To c
 - ActingFor authorizes; it does not execute purchases.
 - `require_approval` is not `allow`. This demo stops without implementing approval.
 - Production applications must independently verify that the Principal itself is authorized to perform the operation. For simplicity, Demo User is assumed to have host permission for every product.
+- Direct human purchases bypass delegated authorization and therefore do not appear in ActingFor Audit Events.
 - Authorize close to execution; a Decision is not a reusable authorization token.
 
 ## ActingFor dependency

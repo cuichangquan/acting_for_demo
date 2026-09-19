@@ -18,6 +18,7 @@ class ShoppingAgentPurchaseTest < ActionDispatch::IntegrationTest
       result = call_for(@everyday)
       assert_equal :allow, result.decision.status
       assert result.purchase.persisted?
+      assert_equal "shopping_agent", result.purchase.source
     end
     assert_equal({ "amount" => 800 }, ActingFor::AuditEvent.last.sanitized_context)
   end

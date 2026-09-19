@@ -22,7 +22,10 @@
   </head>
 
   <body>
-    <nav><%= link_to "ActingFor Shopping Demo", root_path, class: "brand" %><div><%= link_to "Shop", root_path %><%= link_to "Purchases", purchases_path %><%= link_to "Audit Events", audit_events_path %></div></nav>
-    <main><%= yield %></main>
+    <nav><%= link_to "ActingFor Shopping Demo", root_path, class: "brand" %><div><%= link_to "Shop", root_path %><%= link_to "Delegation Settings", delegation_settings_path %><%= link_to "Purchases", purchases_path %><%= link_to "Audit Events", audit_events_path %></div></nav>
+    <main>
+      <% if notice %><p class="flash"><%= notice %></p><% end %>
+      <%= yield %>
+    </main>
   </body>
 </html>

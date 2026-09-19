@@ -9,7 +9,12 @@ class ShoppingAgentPurchase
     )
 
     purchase = if decision.allowed?
-      Purchase.create!(user: principal, product: product, amount: product.price)
+      Purchase.create!(
+        user: principal,
+        product:,
+        amount: product.price,
+        source: :shopping_agent
+      )
     end
 
     Result.new(principal:, agent:, product:, decision:, purchase:)

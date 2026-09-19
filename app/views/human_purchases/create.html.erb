@@ -1,0 +1,12 @@
+<section class="result-card human">
+  <p class="eyebrow">Direct human action</p><h1>PURCHASE EXECUTED</h1>
+  <dl>
+    <dt>Actor</dt><dd><%= @result.principal.name %> / Human</dd>
+    <dt>Product</dt><dd><%= @result.product.name %></dd>
+    <dt>Amount</dt><dd><%= number_to_currency(@result.product.price, unit: "¥", precision: 0) %></dd>
+    <dt>ActingFor</dt><dd><strong>NOT INVOLVED</strong></dd>
+    <dt>Purchase</dt><dd><strong>EXECUTED</strong></dd>
+  </dl>
+  <p class="notice human-notice">Direct human actions do not use ActingFor delegated authorization. Production applications must still apply their own host authorization.</p>
+</section>
+<p><%= link_to "Try another product", root_path, class: "button secondary" %></p>
