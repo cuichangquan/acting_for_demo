@@ -1,5 +1,19 @@
 # Architecture
 
+## Runtime containers
+
+```text
+Mac Host (Docker + Git + GitHub SSH only)
+       ↓ Docker Compose
+app: Ruby 3.4.10 / Rails 8.0.5.1 / Bundler / demo source
+       ↓ PGHOST=db
+db: PostgreSQL 16
+       ↓
+postgres_data named volume
+```
+
+The source tree is bind-mounted for development. Installed gems remain in the image, PostgreSQL data remains in `postgres_data`, and Rails temporary/log data uses named volumes. The host's Ruby and PostgreSQL installations are not used.
+
 ```text
 Human / Principal
        ↓ creates Delegation

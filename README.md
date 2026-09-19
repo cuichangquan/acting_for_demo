@@ -2,7 +2,7 @@
 
 A small, hands-on Rails application showing how the [ActingFor](https://github.com/cuichangquan/acting_for) delegated-authorization gem fits into a real host application.
 
-> **Pre-release note:** ActingFor is not yet published to RubyGems and its source repository is currently private. Until the gem is released or the source becomes public, installing this public demo requires access to the ActingFor repository.
+> **Pre-release note:** ActingFor is not yet published to RubyGems and its source repository is currently private. Until the gem is released or the source becomes public, installing this demo requires access to the ActingFor repository. The demo repository is also private during this verification phase.
 
 ## What this demonstrates
 
@@ -34,31 +34,40 @@ Host Business Logic
 
 ## Requirements
 
-- Ruby 3.4+ (ActingFor supports `>= 3.4, < 4.1`; `.ruby-version` records the locally verified Ruby 4.0.1)
-- Rails 8.0.5.1 (installed by Bundler)
-- PostgreSQL 16 or a compatible supported PostgreSQL installation
+- Docker Desktop or Docker Engine with Docker Compose and BuildKit
+- Git
+- An SSH agent with a GitHub key authorized to read the private ActingFor repository
 - Git access to the private ActingFor repository during the pre-release period
 
-The ActingFor upstream Quick Start was verified on Ruby 3.4.10, Rails 8.0.5.1, and PostgreSQL 16.15. This demo's automated run used Ruby 4.0.1, Rails 8.0.5.1, and PostgreSQL 16.x, all within ActingFor's current support matrix.
+Ruby, Rails, Bundler gems, and PostgreSQL run inside Docker. They are not required on the Mac host. The images use Ruby 3.4.10, Rails 8.0.5.1, and PostgreSQL 16.
 
 ## Quick Start
 
 ```sh
-git clone https://github.com/cuichangquan/acting_for_demo.git
+git clone git@github.com:cuichangquan/acting_for_demo.git
 cd acting_for_demo
-bin/setup --skip-server
-bin/rails server
+docker compose build --ssh default
+docker compose run --rm app bin/setup --skip-server
+docker compose up
 ```
 
-Open <http://localhost:3000>. Configure PostgreSQL using `PGHOST`, `PGUSER`, and `PGPASSWORD`, or edit `config/database.yml`. The database user must be able to create databases.
+Open <http://localhost:3000>. `app` connects to the Compose `db` service; it does not use a PostgreSQL server on the Mac.
 
-While ActingFor is private, authenticate Git first. If your account uses SSH, the upstream pre-release guidance is:
+The build uses BuildKit SSH forwarding to fetch the exact private ActingFor commit. Start your SSH agent and add an authorized key before building. The key is forwarded only during `bundle install`; it is not copied into the image. No host-global Git rewrite is required.
 
 ```sh
-git config --global url."git@github.com:".insteadOf "https://github.com/"
+ssh-add -l
+docker compose build --ssh default
 ```
 
-Remove that global rewrite later if it is not appropriate for your environment. `bin/reset_demo` drops and recreates only the non-production demo databases and restores seed state.
+Run tests and reset the demo through Docker:
+
+```sh
+docker compose run --rm app bin/rails test
+docker compose run --rm app bin/reset_demo
+```
+
+Stop containers without deleting database data using `docker compose down`. To completely reset Docker-managed database and runtime volumes, use `docker compose down -v`; **`-v` permanently deletes the demo database volume**. Then repeat setup. `bin/reset_demo` also drops and recreates only the non-production demo databases.
 
 ## Security notes
 
@@ -89,8 +98,8 @@ Status at verification: release-ready, not released, private repository. Once v0
 ## Tests
 
 ```sh
-bin/rails db:prepare
-bin/rails test
+docker compose run --rm app bin/rails db:prepare
+docker compose run --rm app bin/rails test
 ```
 
 The tests exercise the host integration, not ActingFor's internal test suite.

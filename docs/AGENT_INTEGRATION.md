@@ -2,6 +2,8 @@
 
 No LLM provider is connected in v0.1. A future integration can keep the authorization and execution boundary unchanged:
 
+The current demo runtime is Docker Compose (`app` plus PostgreSQL `db`). Future provider integration should enter through the Rails `app` service and should not bypass the shared service boundary.
+
 ```text
 Claude / ChatGPT / Custom Agent
        ↓ Tool Call

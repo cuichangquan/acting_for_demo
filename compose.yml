@@ -1,0 +1,37 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: demo_password_not_for_production
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 2s
+      timeout: 5s
+      retries: 15
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  app:
+    build:
+      context: .
+      ssh:
+        - default
+    environment:
+      PGHOST: db
+      PGUSER: postgres
+      PGPASSWORD: demo_password_not_for_production
+    ports:
+      - "3000:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - .:/rails
+      - rails_tmp:/rails/tmp
+      - rails_log:/rails/log
+
+volumes:
+  postgres_data:
+  rails_tmp:
+  rails_log:
