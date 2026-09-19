@@ -4,6 +4,7 @@ This document records which ActingFor version or exact commit has been verified 
 
 | Demo revision | ActingFor source | Automated verification | Human Manual Verification |
 | --- | --- | --- | --- |
+| `62b06197e85a57858e3468c5dee76162bcb754da` | `5293f25a21093fa514df53466df503984e4981d1` | PASS (17 runs, 94 assertions, 0 failures, 0 errors, 0 skips) | NOT YET COMPLETED |
 | `9c1407c4b3643b92d02d611c15aefeb7fb290a5c` | `5293f25a21093fa514df53466df503984e4981d1` | PASS (8 runs, 36 assertions, 0 failures, 0 errors) | NOT YET COMPLETED |
 
 The recorded Demo revision is the documentation revision tested immediately before the compatibility-record commit. The compatibility-record-only commit does not change application behavior or the verified documentation content.
