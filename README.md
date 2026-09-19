@@ -1,8 +1,28 @@
 # ActingFor Shopping Demo
 
-A small, hands-on Rails application showing how the [ActingFor](https://github.com/cuichangquan/acting_for) delegated-authorization gem fits into a real host application.
+This is the official hands-on reference application for [ActingFor](https://github.com/cuichangquan/acting_for). It shows how ActingFor's public API fits into a real Rails host application and provides automated integration verification plus an environment for human manual verification.
 
 > **Pre-release note:** ActingFor is not yet published to RubyGems and its source repository is currently private. Until the gem is released or the source becomes public, installing this demo requires access to the ActingFor repository. The demo repository is also private during this verification phase.
+
+## Repository responsibilities
+
+- **ActingFor:** authorization library and source of truth for gem behavior, its Public API, and its Security Contract.
+- **ActingFor Demo:** host-application example and integration-verification environment. It is the source of truth for demo usage, host integration, and the manual-verification workflow.
+
+The demo does not duplicate the gem specification or replace ActingFor's core CI. `acting_for/test` formally tests gem internals, the Public API, and the Security Contract. `acting_for_demo/test` uses only the public API from a real host application and must not depend on `ActingFor::Internal::*`.
+
+```text
+ActingFor implementation / release candidate
+  → core CI
+  → RubyGems release
+  → Demo dependency update
+  → Demo integration tests
+  → Demo smoke verification
+  → Human manual verification
+  → Compatibility record
+```
+
+Problems found through demo integration are reported back to ActingFor as issues or fix candidates; the demo must not work around the gem's specification merely to pass verification.
 
 ## What this demonstrates
 
@@ -94,6 +114,7 @@ Status at verification: release-ready, not released, private repository. Once v0
 ## More documentation
 
 - [Architecture](docs/ARCHITECTURE.md)
+- [Compatibility](docs/COMPATIBILITY.md)
 - [Manual verification checklist](docs/MANUAL_VERIFICATION.md)
 - [Future agent integration](docs/AGENT_INTEGRATION.md)
 
