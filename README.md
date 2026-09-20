@@ -35,6 +35,86 @@ Problems found through demo integration are reported back to ActingFor as issues
 - Direct human purchases compared with delegated-agent purchases
 - A host-built Delegation Settings screen using ActingFor's public API
 
+## Delegated purchase flow
+
+With the demo's default Delegation settings, the flow for the ¥800 product looks like this:
+
+```text
+Principal (User)
+ │
+ │ "You may buy products up to ¥1,000."
+ ▼
+Shopping Agent
+ │
+ │ Wants to purchase a Product priced at ¥800
+ ▼
+Rails Host Application
+ │
+ │ Loads Product#price from PostgreSQL
+ ▼
+ActingFor
+ │
+ ├─ Which Agent is acting?
+ ├─ On whose behalf is it acting?
+ ├─ Is :purchase delegated?
+ ├─ Does the Delegation cover this Product?
+ ├─ Is the Delegation still valid?
+ ├─ Has it been revoked?
+ ├─ Does ¥800 satisfy the ¥1,000 constraint?
+ │
+ ▼
+ALLOW
+ │
+ ├─ AuditEvent is saved automatically
+ ▼
+Rails Host Application
+ │
+ ▼
+Purchase is created
+```
+
+The demo assumes the Principal has host permission to purchase. ActingFor evaluates only the delegated authority, and the Rails host application executes the purchase only when `decision.allowed?` is true.
+
+### 日本語
+
+デモの初期Delegation設定では、¥800の商品購入は次の流れになります。
+
+```text
+User
+ │
+ │ 「1,000円まで買っていいよ」
+ ▼
+Shopping Agent
+ │
+ │ Product ¥800を購入したい
+ ▼
+Rails
+ │
+ │ PostgreSQLからProduct#priceを取得
+ ▼
+ActingFor
+ │
+ ├─ Agentは誰？
+ ├─ 誰の代理？
+ ├─ purchase権限ある？
+ ├─ Product対象？
+ ├─ 期限内？
+ ├─ revokeされてない？
+ ├─ ¥800 <= ¥1,000？
+ │
+ ▼
+ALLOW
+ │
+ ├─ AuditEventを自動保存
+ ▼
+Rails
+ │
+ ▼
+Purchase作成
+```
+
+このデモでは、User本人には購入権限がある前提です。ActingForはAgentへ委任された権限だけを判定し、`decision.allowed?` がtrueのときだけRails側がPurchaseを作成します。
+
 ```text
 Human direct path                 Delegated agent path
 
