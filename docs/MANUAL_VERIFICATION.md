@@ -8,7 +8,7 @@ Status: **NOT YET COMPLETED**
 
 ```text
 Verification Date:
-ActingFor Version / Commit: 5293f25a21093fa514df53466df503984e4981d1
+ActingFor Version / Commit: 2c2e1a6638f12b7fb961f04362f807e2cb6ff9a5
 Demo Commit:
 Ruby:
 Rails:

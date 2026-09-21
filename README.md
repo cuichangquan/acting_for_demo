@@ -191,7 +191,7 @@ Stop containers without deleting database data using `docker compose down`. To c
 ActingFor is pinned in `Gemfile` and `Gemfile.lock` to exact commit:
 
 ```text
-5293f25a21093fa514df53466df503984e4981d1
+2c2e1a6638f12b7fb961f04362f807e2cb6ff9a5
 ```
 
 Status at verification: release-ready, not released, private repository. Once v0.1.0 is public on RubyGems, the Git dependency can be replaced by `gem "acting_for", "~> 0.1.0"`.

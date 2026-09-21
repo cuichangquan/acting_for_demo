@@ -1,7 +1,7 @@
 GIT
   remote: https://github.com/cuichangquan/acting_for.git
-  revision: 5293f25a21093fa514df53466df503984e4981d1
-  ref: 5293f25a21093fa514df53466df503984e4981d1
+  revision: 2c2e1a6638f12b7fb961f04362f807e2cb6ff9a5
+  ref: 2c2e1a6638f12b7fb961f04362f807e2cb6ff9a5
   specs:
     acting_for (0.1.0)
       activerecord (>= 8.0, < 8.2)

@@ -7,6 +7,12 @@ This document records which ActingFor version or exact commit has been verified 
 | `62b06197e85a57858e3468c5dee76162bcb754da` | `5293f25a21093fa514df53466df503984e4981d1` | PASS (17 runs, 94 assertions, 0 failures, 0 errors, 0 skips) | NOT YET COMPLETED |
 | `9c1407c4b3643b92d02d611c15aefeb7fb290a5c` | `5293f25a21093fa514df53466df503984e4981d1` | PASS (8 runs, 36 assertions, 0 failures, 0 errors) | NOT YET COMPLETED |
 
+## Pending re-verification target
+
+The demo dependency is now pinned to ActingFor `2c2e1a6638f12b7fb961f04362f807e2cb6ff9a5` for the v0.1.0 release-candidate verification pass.
+
+This target is **not yet recorded as PASS** in the table above because the automated integration run, smoke verification, and Human Manual Verification have not yet been re-run against this exact source commit. The previous verified source remains part of compatibility history.
+
 The recorded Demo revision is the documentation revision tested immediately before the compatibility-record commit. The compatibility-record-only commit does not change application behavior or the verified documentation content.
 
 ## Current verification environment
