@@ -1,6 +1,6 @@
 # ActingFor Demo Compatibility
 
-This document records which ActingFor version or exact commit has been verified with this demo application. ActingFor is not yet released on RubyGems, so the current record uses an exact source commit.
+This document records which ActingFor version or exact commit has been verified with this demo application. ActingFor 0.1.0 is released on RubyGems; the current dependency target is the released gem.
 
 | Demo revision | ActingFor source | Automated verification | Human Manual Verification |
 | --- | --- | --- | --- |
@@ -9,11 +9,11 @@ This document records which ActingFor version or exact commit has been verified 
 
 ## Pending re-verification target
 
-The demo dependency is now pinned to ActingFor `2c2e1a6638f12b7fb961f04362f807e2cb6ff9a5` for the v0.1.0 release-candidate verification pass.
+The demo dependency now targets RubyGems `acting_for` `~> 0.1.0` and resolves to version `0.1.0` in `Gemfile.lock`.
 
-This target is **not yet recorded as PASS** in the table above because the automated integration run, smoke verification, and Human Manual Verification have not yet been re-run against this exact source commit. The previous verified source remains part of compatibility history.
+This target is **not yet recorded as PASS** in the table above until automated integration verification is run against the exact demo revision containing this dependency switch. Smoke verification and Human Manual Verification remain separate and must not be inferred from automated test success.
 
-The recorded Demo revision is the documentation revision tested immediately before the compatibility-record commit. The compatibility-record-only commit does not change application behavior or the verified documentation content.
+The recorded Demo revision is the tested revision immediately before the compatibility-record commit. A compatibility-record-only follow-up does not change application behavior.
 
 ## Current verification environment
 
@@ -34,19 +34,13 @@ If demo integration reveals a bug or API problem, treat it as feedback for an Ac
 
 ## Release compatibility procedure
 
-Before the first RubyGems release, pin ActingFor to an exact commit:
-
-```ruby
-gem "acting_for",
-  github: "cuichangquan/acting_for",
-  ref: "<exact sha>"
-```
-
-After ActingFor v0.1.0 is released, switch to:
+For released v0.1.x integration, use the RubyGems version requirement:
 
 ```ruby
 gem "acting_for", "~> 0.1.0"
 ```
+
+For an unreleased future release-candidate verification pass, an exact Git commit may be used temporarily and must be recorded explicitly in this file.
 
 For every dependency update, complete and record this sequence:
 

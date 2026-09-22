@@ -2,7 +2,7 @@
 
 This is the official hands-on reference application for [ActingFor](https://github.com/cuichangquan/acting_for). It shows how ActingFor's public API fits into a real Rails host application and provides automated integration verification plus an environment for human manual verification.
 
-> **Pre-release note:** ActingFor is not yet published to RubyGems. Both this demo and the ActingFor source repository are public; until the gem is released, this demo pins ActingFor to an exact Git commit for release-candidate verification.
+> **Release note:** ActingFor 0.1.0 is published on RubyGems. This demo uses the released `~> 0.1.0` dependency and records the exact resolved gem in `Gemfile.lock`.
 
 ## Repository responsibilities
 
@@ -157,7 +157,7 @@ Open <http://localhost:3000>. `app` connects to the Compose `db` service; it doe
 
 For optional database inspection from the Mac (for example, with TablePlus), use host `127.0.0.1`, port `5432`, user `postgres`, password `demo_password_not_for_production`, database `acting_for_demo_development`, and disable SSL. This development-only credential is defined by Compose and must not be reused outside this demo.
 
-The image installs the exact public ActingFor commit pinned by `Gemfile` / `Gemfile.lock`. No GitHub credentials, SSH agent, or SSH forwarding are required.
+The image installs the released ActingFor gem resolved by `Gemfile` / `Gemfile.lock`. No GitHub credentials, SSH agent, or SSH forwarding are required.
 
 Run tests and reset the demo through Docker:
 
@@ -181,13 +181,13 @@ Stop containers without deleting database data using `docker compose down`. To c
 
 ## ActingFor dependency
 
-ActingFor is pinned in `Gemfile` and `Gemfile.lock` to exact commit:
+ActingFor is installed from RubyGems with:
 
-```text
-2c2e1a6638f12b7fb961f04362f807e2cb6ff9a5
+```ruby
+gem "acting_for", "~> 0.1.0"
 ```
 
-Status at verification: release-ready, not released, public repository. Once v0.1.0 is public on RubyGems, the Git dependency can be replaced by `gem "acting_for", "~> 0.1.0"`.
+`Gemfile.lock` resolves the dependency to ActingFor `0.1.0`. The published gem SHA256 verified during the release process is `a7c3cfc97bf04445c04b8fc9cbe6be8a9aa433cfb8ba20b0da90f853b1336abd`.
 
 ## More documentation
 
