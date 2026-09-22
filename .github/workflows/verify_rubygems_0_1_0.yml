@@ -52,13 +52,14 @@ jobs:
           fi
           grep -A5 -B2 "acting_for (0.1.0)" Gemfile.lock
 
-      - name: Prepare database
-        run: bundle exec rails db:prepare
+      - name: Prepare test database without demo seeds
+        run: bundle exec rails db:schema:load
 
       - name: Run demo integration tests
         run: bundle exec rails test
 
       - name: Upload resolved lockfile
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: rubygems-0.1.0-lockfile
