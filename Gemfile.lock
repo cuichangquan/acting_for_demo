@@ -1,16 +1,10 @@
-GIT
-  remote: https://github.com/cuichangquan/acting_for.git
-  revision: 2c2e1a6638f12b7fb961f04362f807e2cb6ff9a5
-  ref: 2c2e1a6638f12b7fb961f04362f807e2cb6ff9a5
+GEM
+  remote: https://rubygems.org/
   specs:
     acting_for (0.1.0)
       activerecord (>= 8.0, < 8.2)
       activesupport (>= 8.0, < 8.2)
       railties (>= 8.0, < 8.2)
-
-GEM
-  remote: https://rubygems.org/
-  specs:
     actioncable (8.0.5.1)
       actionpack (= 8.0.5.1)
       activesupport (= 8.0.5.1)
@@ -243,7 +237,7 @@ PLATFORMS
   x86_64-linux-musl
 
 DEPENDENCIES
-  acting_for!
+  acting_for (~> 0.1.0)
   debug
   json (< 3)
   pg (~> 1.1)
@@ -253,7 +247,7 @@ DEPENDENCIES
   tzinfo-data
 
 CHECKSUMS
-  acting_for (0.1.0)
+  acting_for (0.1.0) sha256=a7c3cfc97bf04445c04b8fc9cbe6be8a9aa433cfb8ba20b0da90f853b1336abd
   actioncable (8.0.5.1) sha256=5adb700c605a7ef7628f87dc7a6da20cd5f0ceac782a59055c864ea51a77d7c7
   actionmailbox (8.0.5.1) sha256=f8b72eadf53b3e285df8f2d1f6533012abf5a0a001180abe436aea3139eeaed6
   actionmailer (8.0.5.1) sha256=c3d2b3f96e1989ea25f51699786a97fcb2536eb7abfc2a667cb8f2376ec08403
