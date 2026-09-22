@@ -1,0 +1,66 @@
+name: Verify RubyGems ActingFor 0.1.0
+
+on:
+  push:
+    branches:
+      - verification/rubygems-0.1.0
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: demo_ci
+          POSTGRES_DB: acting_for_demo_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d acting_for_demo_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      RAILS_ENV: test
+      PGHOST: localhost
+      PGPORT: "5432"
+      PGUSER: postgres
+      PGPASSWORD: demo_ci
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.4.10"
+          bundler: "4.0.3"
+
+      - name: Resolve ActingFor from RubyGems
+        run: |
+          set -euo pipefail
+          bundle update acting_for
+          bundle info acting_for
+          bundle exec ruby -e 'require "acting_for"; abort "wrong version" unless ActingFor::VERSION == "0.1.0"; puts "ActingFor version: #{ActingFor::VERSION}"'
+          if grep -q "github.com/cuichangquan/acting_for" Gemfile.lock; then
+            echo "Gemfile.lock still contains Git source"
+            exit 1
+          fi
+          grep -A5 -B2 "acting_for (0.1.0)" Gemfile.lock
+
+      - name: Prepare database
+        run: bundle exec rails db:prepare
+
+      - name: Run demo integration tests
+        run: bundle exec rails test
+
+      - name: Upload resolved lockfile
+        uses: actions/upload-artifact@v4
+        with:
+          name: rubygems-0.1.0-lockfile
+          path: Gemfile.lock
+          if-no-files-found: error
