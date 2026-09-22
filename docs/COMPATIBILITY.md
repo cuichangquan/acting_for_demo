@@ -6,14 +6,17 @@ This document records which ActingFor version or exact commit has been verified 
 | --- | --- | --- | --- |
 | `62b06197e85a57858e3468c5dee76162bcb754da` | `5293f25a21093fa514df53466df503984e4981d1` | PASS (17 runs, 94 assertions, 0 failures, 0 errors, 0 skips) | NOT YET COMPLETED |
 | `9c1407c4b3643b92d02d611c15aefeb7fb290a5c` | `5293f25a21093fa514df53466df503984e4981d1` | PASS (8 runs, 36 assertions, 0 failures, 0 errors) | NOT YET COMPLETED |
+| `e87ef0418d7938443ca3ad9fca109538e8db045b` | RubyGems `acting_for` `0.1.0` | PASS (17 runs, 94 assertions, 0 failures, 0 errors, 0 skips) | NOT YET COMPLETED |
 
-## Pending re-verification target
+## Released gem verification
 
-The demo dependency now targets RubyGems `acting_for` `~> 0.1.0` and resolves to version `0.1.0` in `Gemfile.lock`.
+The demo dependency targets RubyGems `acting_for` `~> 0.1.0` and resolves to version `0.1.0` in `Gemfile.lock`.
 
-This target is **not yet recorded as PASS** in the table above until automated integration verification is run against the exact demo revision containing this dependency switch. Smoke verification and Human Manual Verification remain separate and must not be inferred from automated test success.
+Automated integration verification against exact Demo revision `e87ef0418d7938443ca3ad9fca109538e8db045b` passed in GitHub Actions run `35677771716`: **17 runs / 94 assertions / 0 failures / 0 errors / 0 skips**. The verification also confirmed the installed `ActingFor::VERSION == "0.1.0"` and the lockfile checksum `a7c3cfc97bf04445c04b8fc9cbe6be8a9aa433cfb8ba20b0da90f853b1336abd`.
 
-The recorded Demo revision is the tested revision immediately before the compatibility-record commit. A compatibility-record-only follow-up does not change application behavior.
+Smoke verification and Human Manual Verification remain separate and are **not yet completed**. Automated test success must not be interpreted as either of those checks passing.
+
+The recorded Demo revision is the tested revision immediately before this compatibility-record-only follow-up. This follow-up does not change application behavior.
 
 ## Current verification environment
 
