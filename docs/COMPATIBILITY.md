@@ -7,12 +7,15 @@ This document records which ActingFor version or exact commit has been verified 
 | `62b06197e85a57858e3468c5dee76162bcb754da` | `5293f25a21093fa514df53466df503984e4981d1` | PASS (17 runs, 94 assertions, 0 failures, 0 errors, 0 skips) | NOT YET COMPLETED |
 | `9c1407c4b3643b92d02d611c15aefeb7fb290a5c` | `5293f25a21093fa514df53466df503984e4981d1` | PASS (8 runs, 36 assertions, 0 failures, 0 errors) | NOT YET COMPLETED |
 | `e87ef0418d7938443ca3ad9fca109538e8db045b` | RubyGems `acting_for` `0.1.0` | PASS (17 runs, 94 assertions, 0 failures, 0 errors, 0 skips) | NOT YET COMPLETED |
+| `fd4846a7f9e6301bfcfd1cef9e889e4442fe05be` | RubyGems `acting_for` `0.1.0` | PASS (18 runs, 108 assertions, 0 failures, 0 errors, 0 skips) | NOT YET COMPLETED |
 
 ## Released gem verification
 
 The demo dependency targets RubyGems `acting_for` `~> 0.1.0` and resolves to version `0.1.0` in `Gemfile.lock`.
 
 Automated integration verification against exact Demo revision `e87ef0418d7938443ca3ad9fca109538e8db045b` passed in GitHub Actions run `35677771716`: **17 runs / 94 assertions / 0 failures / 0 errors / 0 skips**. The verification also confirmed the installed `ActingFor::VERSION == "0.1.0"` and the lockfile checksum `a7c3cfc97bf04445c04b8fc9cbe6be8a9aa433cfb8ba20b0da90f853b1336abd`.
+
+After Human Manual Verification exposed a Demo-only 500 error when the `allow` Delegation was revoked, Demo revision `fd4846a7f9e6301bfcfd1cef9e889e4442fe05be` was verified in GitHub Actions run `35689734551`: **18 runs / 108 assertions / 0 failures / 0 errors / 0 skips**. The new regression test confirms that the Shop remains renderable with an incomplete Delegation configuration and that an unmatched purchase request still fails closed with `DENY` and no Purchase.
 
 Smoke verification and Human Manual Verification remain separate and are **not yet completed**. Automated test success must not be interpreted as either of those checks passing.
 
