@@ -9,12 +9,18 @@
 </section>
 <section>
   <h2>Current delegated authority</h2>
-  <div class="rule-grid">
-    <article class="allow"><strong>≤ <%= number_to_currency(@delegation_settings.allow_max, unit: "¥", precision: 0) %></strong><span>ALLOW</span></article>
-    <article class="approval"><strong><%= number_to_currency(@delegation_settings.allow_max + 1, unit: "¥", precision: 0) %>–<%= number_to_currency(@delegation_settings.approval_max, unit: "¥", precision: 0) %></strong><span>REQUIRE APPROVAL</span></article>
-    <article class="deny"><strong>&gt; <%= number_to_currency(@delegation_settings.approval_max, unit: "¥", precision: 0) %></strong><span>DENY</span><small>Fail closed: no matching delegation</small></article>
-  </div>
-  <p><%= link_to "Change the host application's delegation example", delegation_settings_path %></p>
+  <% if @delegation_settings %>
+    <div class="rule-grid">
+      <article class="allow"><strong>≤ <%= number_to_currency(@delegation_settings.allow_max, unit: "¥", precision: 0) %></strong><span>ALLOW</span></article>
+      <article class="approval"><strong><%= number_to_currency(@delegation_settings.allow_max + 1, unit: "¥", precision: 0) %>–<%= number_to_currency(@delegation_settings.approval_max, unit: "¥", precision: 0) %></strong><span>REQUIRE APPROVAL</span></article>
+      <article class="deny"><strong>&gt; <%= number_to_currency(@delegation_settings.approval_max, unit: "¥", precision: 0) %></strong><span>DENY</span><small>Fail closed: no matching delegation</small></article>
+    </div>
+    <p><%= link_to "Change the host application's delegation example", delegation_settings_path %></p>
+  <% else %>
+    <p class="notice"><strong>Delegation configuration is incomplete.</strong> ActingFor will evaluate the currently active Delegations and deny any request that has no matching Delegation.</p>
+    <p><%= @delegation_settings_error %></p>
+    <%= button_to "Reset to Demo Defaults", reset_delegation_settings_path, class: "button danger-button" %>
+  <% end %>
 </section>
 <section>
   <h2>Products</h2>

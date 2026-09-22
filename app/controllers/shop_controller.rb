@@ -4,5 +4,8 @@ class ShopController < ApplicationController
     @agent = ActingFor::Agent.find_by!(identifier: "shopping-agent")
     @products = Product.order(:price)
     @delegation_settings = DemoDelegationSettings.current(principal: @principal, agent: @agent)
+  rescue DemoDelegationSettings::InvalidSettings => error
+    @delegation_settings = nil
+    @delegation_settings_error = error.message
   end
 end

@@ -4,6 +4,7 @@ class DelegationSettingsTest < ActionDispatch::IntegrationTest
   setup do
     @principal = User.create!(name: "Demo User")
     @agent = ActingFor::Agent.create!(identifier: "shopping-agent", name: "Shopping Agent")
+    @everyday = Product.create!(name: "Everyday Item", price: 800)
     @approval = Product.create!(name: "Approval Item", price: 2_000)
     @expensive = Product.create!(name: "Expensive Item", price: 5_000)
     DemoDelegationSettings.reset!(principal: @principal, agent: @agent)
@@ -104,6 +105,27 @@ class DelegationSettingsTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "¥2,501"
     assert_includes response.body, "¥6,000"
   end
+
+  test "shop remains usable and purchase fails closed when allow delegation is revoked" do
+    active_delegations.find { |delegation| delegation.effect == "allow" }.revoke!
+
+    get root_path
+
+    assert_response :success
+    assert_includes response.body, "Delegation configuration is incomplete"
+    assert_includes response.body, "Ask Shopping Agent to Buy"
+
+    assert_no_difference "Purchase.count" do
+      assert_difference "ActingFor::AuditEvent.count", 1 do
+        post purchase_requests_path, params: { product_id: @everyday.id }
+      end
+    end
+
+    assert_response :success
+    assert_includes response.body, "DENY"
+    assert_includes response.body, "NOT EXECUTED"
+  end
+
 
   private
 
