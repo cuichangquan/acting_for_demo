@@ -7,21 +7,17 @@ ENV APP_HOME=/rails \
     BUNDLE_WITHOUT=production
 
 RUN apt-get update -qq && \
-    apt-get install --no-install-recommends -y build-essential git libpq-dev openssh-client && \
+    apt-get install --no-install-recommends -y build-essential git libpq-dev && \
     rm -rf /var/lib/apt/lists/*
 
 WORKDIR $APP_HOME
 
 COPY Gemfile Gemfile.lock ./
 
-# ActingFor is private before release. BuildKit forwards the host SSH agent for
-# this step only; no key or token is copied into this image or image layer.
-RUN --mount=type=ssh \
-    mkdir -p -m 0700 /root/.ssh && \
-    ssh-keyscan github.com >> /root/.ssh/known_hosts && \
-    git config --global url."git@github.com:".insteadOf "https://github.com/" && \
-    bundle install && \
-    rm -rf /root/.ssh /root/.gitconfig /usr/local/bundle/cache
+# ActingFor is fetched from its public GitHub repository at the exact commit
+# pinned by Gemfile / Gemfile.lock.
+RUN bundle install && \
+    rm -rf /usr/local/bundle/cache
 
 COPY . .
 

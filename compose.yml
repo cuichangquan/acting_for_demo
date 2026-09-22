@@ -17,8 +17,6 @@ services:
   app:
     build:
       context: .
-      ssh:
-        - default
     environment:
       PGHOST: db
       PGUSER: postgres

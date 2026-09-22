@@ -2,7 +2,7 @@
 
 This is the official hands-on reference application for [ActingFor](https://github.com/cuichangquan/acting_for). It shows how ActingFor's public API fits into a real Rails host application and provides automated integration verification plus an environment for human manual verification.
 
-> **Pre-release note:** ActingFor is not yet published to RubyGems and its source repository is currently private. Until the gem is released or the source becomes public, installing this demo requires access to the ActingFor repository. The demo repository is also private during this verification phase.
+> **Pre-release note:** ActingFor is not yet published to RubyGems. Both this demo and the ActingFor source repository are public; until the gem is released, this demo pins ActingFor to an exact Git commit for release-candidate verification.
 
 ## Repository responsibilities
 
@@ -138,10 +138,8 @@ The browser-accessible Delegation Settings screen changes the two demo limits an
 
 ## Requirements
 
-- Docker Desktop or Docker Engine with Docker Compose and BuildKit
+- Docker Desktop or Docker Engine with Docker Compose
 - Git
-- An SSH agent with a GitHub key authorized to read the private ActingFor repository
-- Git access to the private ActingFor repository during the pre-release period
 
 Ruby, Rails, Bundler gems, and PostgreSQL run inside Docker. They are not required on the Mac host. The images use Ruby 3.4.10, Rails 8.0.5.1, and PostgreSQL 16.
 
@@ -150,7 +148,7 @@ Ruby, Rails, Bundler gems, and PostgreSQL run inside Docker. They are not requir
 ```sh
 git clone git@github.com:cuichangquan/acting_for_demo.git
 cd acting_for_demo
-docker compose build --ssh default
+docker compose build
 docker compose run --rm app bin/setup --skip-server
 docker compose up
 ```
@@ -159,12 +157,7 @@ Open <http://localhost:3000>. `app` connects to the Compose `db` service; it doe
 
 For optional database inspection from the Mac (for example, with TablePlus), use host `127.0.0.1`, port `5432`, user `postgres`, password `demo_password_not_for_production`, database `acting_for_demo_development`, and disable SSL. This development-only credential is defined by Compose and must not be reused outside this demo.
 
-The build uses BuildKit SSH forwarding to fetch the exact private ActingFor commit. Start your SSH agent and add an authorized key before building. The key is forwarded only during `bundle install`; it is not copied into the image. No host-global Git rewrite is required.
-
-```sh
-ssh-add -l
-docker compose build --ssh default
-```
+The image installs the exact public ActingFor commit pinned by `Gemfile` / `Gemfile.lock`. No GitHub credentials, SSH agent, or SSH forwarding are required.
 
 Run tests and reset the demo through Docker:
 
@@ -194,7 +187,7 @@ ActingFor is pinned in `Gemfile` and `Gemfile.lock` to exact commit:
 2c2e1a6638f12b7fb961f04362f807e2cb6ff9a5
 ```
 
-Status at verification: release-ready, not released, private repository. Once v0.1.0 is public on RubyGems, the Git dependency can be replaced by `gem "acting_for", "~> 0.1.0"`.
+Status at verification: release-ready, not released, public repository. Once v0.1.0 is public on RubyGems, the Git dependency can be replaced by `gem "acting_for", "~> 0.1.0"`.
 
 ## More documentation
 

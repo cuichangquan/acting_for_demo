@@ -3,7 +3,7 @@
 ## Runtime containers
 
 ```text
-Mac Host (Docker + Git + GitHub SSH only)
+Mac Host (Docker + Git)
        ↓ Docker Compose
 app: Ruby 3.4.10 / Rails 8.0.5.1 / Bundler / demo source
        ↓ PGHOST=db

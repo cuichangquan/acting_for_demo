@@ -21,7 +21,7 @@ Start from a clean Docker state:
 
 ```sh
 docker compose down -v
-docker compose build --ssh default
+docker compose build
 docker compose run --rm app bin/setup --skip-server
 docker compose up
 ```
