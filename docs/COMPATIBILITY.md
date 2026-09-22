@@ -8,6 +8,7 @@ This document records which ActingFor version or exact commit has been verified 
 | `9c1407c4b3643b92d02d611c15aefeb7fb290a5c` | `5293f25a21093fa514df53466df503984e4981d1` | PASS (8 runs, 36 assertions, 0 failures, 0 errors) | NOT YET COMPLETED |
 | `e87ef0418d7938443ca3ad9fca109538e8db045b` | RubyGems `acting_for` `0.1.0` | PASS (17 runs, 94 assertions, 0 failures, 0 errors, 0 skips) | NOT YET COMPLETED |
 | `fd4846a7f9e6301bfcfd1cef9e889e4442fe05be` | RubyGems `acting_for` `0.1.0` | PASS (18 runs, 108 assertions, 0 failures, 0 errors, 0 skips) | NOT YET COMPLETED |
+| `32058147b6527ce46486c523e9a8d036760ca372` | RubyGems `acting_for` `0.1.0` | PASS (18 runs, 108 assertions, 0 failures, 0 errors, 0 skips) | PARTIAL: Scenarios 1–6 human PASS; Scenarios 7–11 Codex-assisted PASS; full human completion not claimed |
 
 ## Released gem verification
 
@@ -15,18 +16,32 @@ The demo dependency targets RubyGems `acting_for` `~> 0.1.0` and resolves to ver
 
 Automated integration verification against exact Demo revision `e87ef0418d7938443ca3ad9fca109538e8db045b` passed in GitHub Actions run `35677771716`: **17 runs / 94 assertions / 0 failures / 0 errors / 0 skips**. The verification also confirmed the installed `ActingFor::VERSION == "0.1.0"` and the lockfile checksum `a7c3cfc97bf04445c04b8fc9cbe6be8a9aa433cfb8ba20b0da90f853b1336abd`.
 
-After Human Manual Verification exposed a Demo-only 500 error when the `allow` Delegation was revoked, Demo revision `fd4846a7f9e6301bfcfd1cef9e889e4442fe05be` was verified in GitHub Actions run `35689734551`: **18 runs / 108 assertions / 0 failures / 0 errors / 0 skips**. The new regression test confirms that the Shop remains renderable with an incomplete Delegation configuration and that an unmatched purchase request still fails closed with `DENY` and no Purchase.
+Human verification later exposed a Demo-only 500 error when the `allow` Delegation was revoked. The authorization itself failed closed as expected, but the Shop attempted to render a complete two-Delegation settings shape. Demo commit `fd4846a7f9e6301bfcfd1cef9e889e4442fe05be` fixed that host-UI issue. GitHub Actions run `35689734551` then passed with **18 runs / 108 assertions / 0 failures / 0 errors / 0 skips**.
 
-Smoke verification and Human Manual Verification remain separate and are **not yet completed**. Automated test success must not be interpreted as either of those checks passing.
+Smoke verification is **PASS**.
 
-The recorded Demo revision is the tested revision immediately before this compatibility-record-only follow-up. This follow-up does not change application behavior.
+The release verification record is intentionally split by who performed the check:
+
+```text
+Scenarios 1–6  → human-verified PASS
+Scenarios 7–11 → Codex-assisted PASS
+Regression      → PASS (18 runs / 108 assertions / 0 failures / 0 errors / 0 skips)
+Full Human Manual Verification → NOT CLAIMED
+```
+
+Scenarios 1–3 were human-confirmed before the partial-revoke Demo fix; that fix did not change the complete-configuration paths exercised by those scenarios. Scenarios 4–6 were human-confirmed after the fix. Scenarios 7–11 and the final regression suite were executed by Codex against exact Demo revision `32058147b6527ce46486c523e9a8d036760ca372`.
+
+The detailed evidence and classification are recorded in `docs/MANUAL_VERIFICATION.md`.
 
 ## Current verification environment
 
+- Verification date: 2026-09-22
+- ActingFor: RubyGems 0.1.0
 - Ruby: 3.4.10
 - Rails: 8.0.5.1
 - PostgreSQL: 16.15
 - Docker Compose
+- Demo revision for Codex-assisted Scenarios 7–11 and final regression: `32058147b6527ce46486c523e9a8d036760ca372`
 
 ## Source-of-truth boundary
 
@@ -55,7 +70,7 @@ Demo automated integration test
   ↓
 Smoke verification
   ↓
-Human Manual Verification
+Human / assisted verification with provenance recorded
   ↓
 COMPATIBILITY.md update
 ```
@@ -69,6 +84,6 @@ ActingFor implementation / release candidate
   → Demo dependency update
   → Demo integration tests
   → Demo smoke verification
-  → Human manual verification
+  → Human / assisted verification
   → Compatibility record
 ```
