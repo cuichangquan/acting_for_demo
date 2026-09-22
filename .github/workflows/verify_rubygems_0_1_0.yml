@@ -1,4 +1,4 @@
-name: Verify RubyGems ActingFor 0.1.0
+name: Verify Final Demo Revision Against RubyGems
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
       - verification/rubygems-0.1.0
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   verify:
@@ -33,48 +33,30 @@ jobs:
       PGPASSWORD: demo_ci
 
     steps:
-      - uses: actions/checkout@v6
+      - name: Checkout exact demo revision
+        uses: actions/checkout@v6
+        with:
+          ref: e87ef0418d7938443ca3ad9fca109538e8db045b
 
       - uses: ruby/setup-ruby@v1
         with:
           ruby-version: "3.4.10"
           bundler: "4.0.3"
 
-      - name: Resolve ActingFor from RubyGems
+      - name: Install locked dependencies
         run: |
           set -euo pipefail
-          bundle update acting_for
+          bundle install
           bundle info acting_for
           bundle exec ruby -e 'require "acting_for"; abort "wrong version" unless ActingFor::VERSION == "0.1.0"; puts "ActingFor version: #{ActingFor::VERSION}"'
           if grep -q "github.com/cuichangquan/acting_for" Gemfile.lock; then
-            echo "Gemfile.lock still contains Git source"
+            echo "Gemfile.lock unexpectedly contains Git source"
             exit 1
           fi
-          grep -A5 -B2 "acting_for (0.1.0)" Gemfile.lock
+          grep "acting_for (0.1.0) sha256=a7c3cfc97bf04445c04b8fc9cbe6be8a9aa433cfb8ba20b0da90f853b1336abd" Gemfile.lock
 
       - name: Prepare test database without demo seeds
         run: bundle exec rails db:schema:load
 
       - name: Run demo integration tests
         run: bundle exec rails test
-
-      - name: Commit resolved lockfile on verification branch
-        run: |
-          set -euo pipefail
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add Gemfile.lock
-          if git diff --cached --quiet; then
-            echo "Gemfile.lock already matches the RubyGems resolution."
-          else
-            git commit -m "chore: lock acting_for 0.1.0 from RubyGems"
-            git push origin HEAD:verification/rubygems-0.1.0
-          fi
-
-      - name: Upload resolved lockfile
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: rubygems-0.1.0-lockfile
-          path: Gemfile.lock
-          if-no-files-found: error
