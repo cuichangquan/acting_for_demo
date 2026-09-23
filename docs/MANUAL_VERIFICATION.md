@@ -1,20 +1,23 @@
 # Human Manual Verification
 
-This document distinguishes human-observed browser verification from Codex-assisted verification. Automated or agent-assisted success must not be represented as human verification.
+This document distinguishes human-observed verification from Codex-assisted verification. Historical Codex-assisted evidence is retained for provenance, but the release status below reflects the later human completion pass.
 
-Status: **PARTIALLY COMPLETED — Scenarios 1–6 human-verified; Scenarios 7–11 Codex-assisted. Full human completion is not claimed.**
+Status: **COMPLETED — Scenarios 1–11 human-verified. Full Human Manual Verification: PASS.**
 
 ## Environment Record
 
 ```text
-Verification Date: 2026-09-22
+Verification Date: 2026-09-23 (completion pass; Scenarios 1–6 were human-verified on 2026-09-22)
 ActingFor Version / Commit: 0.1.0 (RubyGems)
-Demo Commit: 32058147b6527ce46486c523e9a8d036760ca372
+Demo behavior baseline: 32058147b6527ce46486c523e9a8d036760ca372
+Repository state before this completion record: 073a97f3c350c7c2ac81e2fb2aa6ff1762b1a005
 Ruby: 3.4.10
 Rails: 8.0.5.1
 PostgreSQL: 16.15
-Browser: Browser UI used for human verification of Scenarios 1–6
+Human verification: browser UI for Scenarios 1–6 and 9–11; Rails console for Scenarios 7–8
 OS: macOS host + Docker Compose
+
+Between the behavior baseline and the repository state above, only `docs/COMPATIBILITY.md` and `docs/MANUAL_VERIFICATION.md` changed; no application behavior changed.
 ```
 
 Start from a clean Docker state:
@@ -38,16 +41,16 @@ Scenario 3: PASS — human verified
 Scenario 4: PASS — human verified after Demo partial-revoke fix
 Scenario 5: PASS — human verified
 Scenario 6: PASS — human verified
-Scenario 7: PASS — Codex-assisted
-Scenario 8: PASS — Codex-assisted
-Scenario 9: PASS — Codex-assisted
-Scenario 10: PASS — Codex-assisted
-Scenario 11: PASS — Codex-assisted
+Scenario 7: PASS — human verified in Rails console
+Scenario 8: PASS — human verified in Rails console
+Scenario 9: PASS — human browser verified; service-level evidence also confirmed
+Scenario 10: PASS — human browser verified; service-level evidence also confirmed
+Scenario 11: PASS — human browser verified; service-level evidence also confirmed
 Regression Test: PASS — 18 runs, 108 assertions, 0 failures, 0 errors, 0 skips
-Full Human Manual Verification: NOT CLAIMED
+Full Human Manual Verification: PASS
 ```
 
-Scenarios 1–3 were human-confirmed before the partial-revoke Demo fix. That fix only changed how the Shop handles an incomplete Delegation configuration; the normal complete-configuration paths exercised by Scenarios 1–3 were unchanged. Scenarios 4–6 were then human-confirmed after the fix. Scenarios 7–11 were executed by Codex against Demo revision `32058147b6527ce46486c523e9a8d036760ca372`.
+Scenarios 1–3 were human-confirmed before the partial-revoke Demo fix. That fix only changed how the Shop handles an incomplete Delegation configuration; the normal complete-configuration paths exercised by Scenarios 1–3 were unchanged. Scenarios 4–6 were then human-confirmed after the fix. Scenarios 7–11 were first verified Codex-assisted against Demo revision `32058147b6527ce46486c523e9a8d036760ca372`, then re-verified by the user on 2026-09-23. Scenarios 7–8 used the documented Rails console paths; Scenarios 9–11 were completed through the browser workflow with the corresponding service/Audit results checked. The earlier Codex-assisted evidence remains below as historical evidence.
 
 ## Scenario 1: allow
 
@@ -179,7 +182,7 @@ result = ShoppingAgentPurchase.call(product_id: Product.find_by!(price: 800).id,
 [result.decision.status, result.purchase]
 ```
 
-Codex-assisted evidence:
+Historical Codex-assisted evidence:
 
 ```text
 Decision: deny
@@ -190,6 +193,17 @@ Audit agent_identifier: "manual-other-agent"
 Audit decision: "deny"
 Audit sanitized_context: {"amount"=>800}
 PASS / FAIL: PASS — Codex-assisted
+```
+
+Human completion evidence (2026-09-23):
+
+```text
+Result: [:deny, nil]
+Audit agent_identifier: "manual-other-agent"
+Audit decision: "deny"
+Audit reason: "no_matching_delegation"
+Audit sanitized_context: {"amount"=>800}
+PASS / FAIL: PASS — human verified in Rails console
 ```
 
 Note: `ActingFor::AuditEvent` stores the authorization-time Agent identifier as `agent_identifier`; it does not expose an `event.agent` association. An earlier verification helper incorrectly referenced `event.agent.identifier`; that helper was corrected and was not an authorization defect.
@@ -207,7 +221,7 @@ result = ShoppingAgentPurchase.call(product_id: Product.find_by!(price: 800).id,
 [result.decision.status, result.purchase]
 ```
 
-Codex-assisted evidence:
+Historical Codex-assisted evidence:
 
 ```text
 Decision: deny
@@ -222,11 +236,23 @@ Audit Context: {"amount"=>800}
 PASS / FAIL: PASS — Codex-assisted
 ```
 
+Human completion evidence (2026-09-23):
+
+```text
+Result: [:deny, nil]
+Audit Principal: User#2
+Audit Agent: "shopping-agent"
+Audit Decision: "deny"
+Audit Reason: "no_matching_delegation"
+Audit Context: {"amount"=>800}
+PASS / FAIL: PASS — human verified in Rails console
+```
+
 Restore with `docker compose run --rm app bin/reset_demo`.
 
 ## Scenario 9: direct human purchases
 
-The checklist's browser path is **Buy as Demo User** for each product. For this verification pass, Codex exercised the same host-owned `HumanPurchase` service directly rather than claiming a human browser interaction.
+The checklist's browser path is **Buy as Demo User** for each product. Codex first exercised the same host-owned `HumanPurchase` service directly. On 2026-09-23, the user completed the browser workflow and checked the Audit Events screen.
 
 ```text
 ¥800:  Purchase created, source="human", amount=800
@@ -238,11 +264,20 @@ Sources: ["human", "human", "human"]
 PASS / FAIL: PASS — Codex-assisted
 ```
 
-The browser result template states `ActingFor: NOT INVOLVED`; that browser UI assertion was not reclassified as human-verified by this Codex-assisted pass.
+Human completion evidence (2026-09-23):
+
+```text
+¥800: human purchase confirmed
+¥2,000: human purchase confirmed
+¥5,000: human purchase confirmed
+ActingFor involvement: NOT INVOLVED
+ActingFor AuditEvent count: unchanged for the three direct human purchases
+PASS / FAIL: PASS — human browser verified
+```
 
 ## Scenario 10: change delegated authority
 
-The checklist's browser path changes `1000 / 3000` to `2500 / 6000` through **Delegation Settings**. For this verification pass, Codex exercised `DemoDelegationSettings.replace!` and the host purchase service directly.
+The checklist's browser path changes `1000 / 3000` to `2500 / 6000` through **Delegation Settings**. Codex first exercised `DemoDelegationSettings.replace!` and the host purchase service directly. On 2026-09-23, the user repeated the change through the browser workflow and confirmed the resulting Audit Events.
 
 ```text
 Actual Settings: allow_max=2500 / approval_max=6000
@@ -266,9 +301,19 @@ Audit context: {"amount"=>5000}
 PASS / FAIL: PASS — Codex-assisted
 ```
 
+Human completion evidence (2026-09-23):
+
+```text
+Actual Settings: allow_max=2500 / approval_max=6000
+¥2,000: ALLOW; Purchase created
+¥5,000: REQUIRE APPROVAL; Purchase not created
+Audit Events: ALLOW for Product#2 and REQUIRE APPROVAL for Product#3
+PASS / FAIL: PASS — human browser verified
+```
+
 ## Scenario 11: reset delegated authority
 
-Starting from the Scenario 10 settings, Codex exercised `DemoDelegationSettings.reset!`.
+Starting from the Scenario 10 settings, Codex first exercised `DemoDelegationSettings.reset!`. On 2026-09-23, the user reset the settings through the browser workflow and confirmed the resulting Audit Events.
 
 ```text
 Actual Reset Settings: allow_max=1000 / approval_max=3000
@@ -290,6 +335,16 @@ Audit decision: "deny"
 PASS / FAIL: PASS — Codex-assisted
 ```
 
+Human completion evidence (2026-09-23):
+
+```text
+Actual Reset Settings: allow_max=1000 / approval_max=3000
+¥2,000: REQUIRE APPROVAL; Purchase not created
+¥5,000: DENY; Purchase not created
+Audit Events: REQUIRE APPROVAL for Product#2 and DENY for Product#3
+PASS / FAIL: PASS — human browser verified
+```
+
 ## Regression Test
 
 After Scenarios 7–11, the full Demo test suite was run against Demo revision `32058147b6527ce46486c523e9a8d036760ca372`.
@@ -302,4 +357,4 @@ After Scenarios 7–11, the full Demo test suite was run against Demo revision `
 0 skips
 ```
 
-This regression result is automated verification and does not change the human-verification classification above.
+This regression result is automated verification. The later human completion pass is independently recorded above and closes Full Human Manual Verification as PASS.
