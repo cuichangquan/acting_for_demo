@@ -8,7 +8,7 @@ This document records which ActingFor version or exact commit has been verified 
 | `9c1407c4b3643b92d02d611c15aefeb7fb290a5c` | `5293f25a21093fa514df53466df503984e4981d1` | PASS (8 runs, 36 assertions, 0 failures, 0 errors) | NOT YET COMPLETED |
 | `e87ef0418d7938443ca3ad9fca109538e8db045b` | RubyGems `acting_for` `0.1.0` | PASS (17 runs, 94 assertions, 0 failures, 0 errors, 0 skips) | NOT YET COMPLETED |
 | `fd4846a7f9e6301bfcfd1cef9e889e4442fe05be` | RubyGems `acting_for` `0.1.0` | PASS (18 runs, 108 assertions, 0 failures, 0 errors, 0 skips) | NOT YET COMPLETED |
-| `32058147b6527ce46486c523e9a8d036760ca372` | RubyGems `acting_for` `0.1.0` | PASS (18 runs, 108 assertions, 0 failures, 0 errors, 0 skips) | PARTIAL: Scenarios 1–6 human PASS; Scenarios 7–11 Codex-assisted PASS; full human completion not claimed |
+| `32058147b6527ce46486c523e9a8d036760ca372` | RubyGems `acting_for` `0.1.0` | PASS (18 runs, 108 assertions, 0 failures, 0 errors, 0 skips) | PASS: Scenarios 1–11 human verified; full human completion recorded 2026-09-23 |
 
 ## Released gem verification
 
@@ -20,28 +20,32 @@ Human verification later exposed a Demo-only 500 error when the `allow` Delegati
 
 Smoke verification is **PASS**.
 
-The release verification record is intentionally split by who performed the check:
+The release verification record preserves both the earlier assisted pass and the later human completion pass:
 
 ```text
-Scenarios 1–6  → human-verified PASS
-Scenarios 7–11 → Codex-assisted PASS
+Scenarios 1–6  → human-verified PASS (2026-09-22)
+Scenarios 7–8  → human Rails-console PASS (2026-09-23)
+Scenarios 9–11 → human browser PASS (2026-09-23)
 Regression      → PASS (18 runs / 108 assertions / 0 failures / 0 errors / 0 skips)
-Full Human Manual Verification → NOT CLAIMED
+Full Human Manual Verification → PASS
 ```
 
-Scenarios 1–3 were human-confirmed before the partial-revoke Demo fix; that fix did not change the complete-configuration paths exercised by those scenarios. Scenarios 4–6 were human-confirmed after the fix. Scenarios 7–11 and the final regression suite were executed by Codex against exact Demo revision `32058147b6527ce46486c523e9a8d036760ca372`.
+Scenarios 7–11 were first verified Codex-assisted against exact Demo revision `32058147b6527ce46486c523e9a8d036760ca372`. The user then repeated those checks on 2026-09-23: Scenarios 7–8 through the documented Rails console paths and Scenarios 9–11 through the browser workflow with corresponding service/Audit results checked. The earlier assisted evidence remains in `docs/MANUAL_VERIFICATION.md` for provenance.
+
+The repository commit immediately before the completion record, `073a97f3c350c7c2ac81e2fb2aa6ff1762b1a005`, differs from the behavior baseline `32058147b6527ce46486c523e9a8d036760ca372` only in `docs/COMPATIBILITY.md` and `docs/MANUAL_VERIFICATION.md`; there were no application-behavior changes between them.
 
 The detailed evidence and classification are recorded in `docs/MANUAL_VERIFICATION.md`.
 
 ## Current verification environment
 
-- Verification date: 2026-09-22
+- Verification completion date: 2026-09-23
 - ActingFor: RubyGems 0.1.0
 - Ruby: 3.4.10
 - Rails: 8.0.5.1
 - PostgreSQL: 16.15
 - Docker Compose
-- Demo revision for Codex-assisted Scenarios 7–11 and final regression: `32058147b6527ce46486c523e9a8d036760ca372`
+- Demo behavior baseline and automated regression revision: `32058147b6527ce46486c523e9a8d036760ca372`
+- Human completion: Scenarios 1–11 PASS; Scenarios 7–8 Rails console, Scenarios 9–11 browser workflow
 
 ## Source-of-truth boundary
 
