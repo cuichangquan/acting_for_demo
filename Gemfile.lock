@@ -1,7 +1,7 @@
 GEM
   remote: https://rubygems.org/
   specs:
-    acting_for (0.1.0)
+    acting_for (0.1.1)
       activerecord (>= 8.0, < 8.2)
       activesupport (>= 8.0, < 8.2)
       railties (>= 8.0, < 8.2)
@@ -203,7 +203,7 @@ GEM
       logger
       prism (>= 1.6.0)
       tsort
-    rdoc (8.0.0)
+    rdoc (8.1.0)
       erb
       prism (>= 1.6.0)
       rbs (>= 4.0.0)
@@ -237,7 +237,7 @@ PLATFORMS
   x86_64-linux-musl
 
 DEPENDENCIES
-  acting_for (~> 0.1.0)
+  acting_for (~> 0.1.1)
   debug
   json (< 3)
   pg (~> 1.1)
@@ -247,7 +247,7 @@ DEPENDENCIES
   tzinfo-data
 
 CHECKSUMS
-  acting_for (0.1.0) sha256=a7c3cfc97bf04445c04b8fc9cbe6be8a9aa433cfb8ba20b0da90f853b1336abd
+  acting_for (0.1.1) sha256=57ceb266285a0970af79c3ad745171638799b00b6d8617bf9ecfc13382819c29
   actioncable (8.0.5.1) sha256=5adb700c605a7ef7628f87dc7a6da20cd5f0ceac782a59055c864ea51a77d7c7
   actionmailbox (8.0.5.1) sha256=f8b72eadf53b3e285df8f2d1f6533012abf5a0a001180abe436aea3139eeaed6
   actionmailer (8.0.5.1) sha256=c3d2b3f96e1989ea25f51699786a97fcb2536eb7abfc2a667cb8f2376ec08403
@@ -318,7 +318,7 @@ CHECKSUMS
   railties (8.0.5.1) sha256=da1958e1d9dab04691a2f8721b3ff7fab323715d37f103c19972dedfd644d5c7
   rake (13.4.2) sha256=cb825b2bd5f1f8e91ca37bddb4b9aaf345551b4731da62949be002fa89283701
   rbs (4.2.0) sha256=51f7b886dcc05bc09e10b901daa6a81829f6adc03101d6ca9ea4aac6103e0674
-  rdoc (8.0.0) sha256=03bf8c08a9639658855a0cfd77c0abca8325c227693f7f33f82957811348c469
+  rdoc (8.1.0) sha256=befc37880a5cfd36dcb176c748b5fd5ee39dd3536a75e81824e4972ce230f60a
   reline (0.7.0) sha256=5b012d8e55dbf9d450f12bde2cf7d15ff546ae80b3f8f3b30e570d431815583d
   securerandom (0.4.1) sha256=cc5193d414a4341b6e225f0cb4446aceca8e50d5e1888743fac16987638ea0b1
   thor (1.5.0) sha256=e3a9e55fe857e44859ce104a84675ab6e8cd59c650a49106a05f55f136425e73

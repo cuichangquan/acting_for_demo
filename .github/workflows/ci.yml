@@ -1,0 +1,52 @@
+name: Demo CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Demo
+        uses: actions/checkout@v6
+
+      - name: Build Demo
+        run: docker compose build
+
+      - name: Prepare Demo databases
+        run: docker compose run --rm app bin/setup --skip-server
+
+      - name: Show installed ActingFor version
+        run: |
+          docker compose run --rm app ruby -e '
+            require "acting_for"
+            puts "ActingFor version: #{ActingFor::VERSION}"
+          '
+
+      - name: Run Demo integration tests
+        run: docker compose run --rm app bin/rails test
+
+      - name: Start Demo
+        run: docker compose up -d
+
+      - name: Smoke verify HTTP
+        run: |
+          set -euo pipefail
+          for i in $(seq 1 30); do
+            if curl --fail --silent --show-error http://localhost:3000/ > /tmp/demo.html; then
+              break
+            fi
+            sleep 2
+          done
+          test -s /tmp/demo.html
+          grep -E 'ActingFor|Shopping Agent|Everyday Item' /tmp/demo.html
+          echo "Smoke HTTP: PASS"
+
+      - name: Cleanup
+        if: always()
+        run: docker compose down -v

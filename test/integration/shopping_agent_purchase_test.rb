@@ -17,6 +17,8 @@ class ShoppingAgentPurchaseTest < ActionDispatch::IntegrationTest
     assert_difference ["Purchase.count", "ActingFor::AuditEvent.count"], 1 do
       result = call_for(@everyday)
       assert_equal :allow, result.decision.status
+      assert_equal :delegation_allowed, result.decision.reason_code
+      assert_equal result.decision.reason_code.to_s, ActingFor::AuditEvent.last.reason_code
       assert result.purchase.persisted?
       assert_equal "shopping_agent", result.purchase.source
     end
@@ -28,6 +30,8 @@ class ShoppingAgentPurchaseTest < ActionDispatch::IntegrationTest
       assert_difference "ActingFor::AuditEvent.count", 1 do
         result = call_for(@approval)
         assert_equal :require_approval, result.decision.status
+        assert_equal :delegation_requires_approval, result.decision.reason_code
+        assert_equal result.decision.reason_code.to_s, ActingFor::AuditEvent.last.reason_code
         assert_nil result.purchase
       end
     end
@@ -36,7 +40,10 @@ class ShoppingAgentPurchaseTest < ActionDispatch::IntegrationTest
   test "unmatched amount denies closed with audit and no purchase" do
     assert_no_difference "Purchase.count" do
       assert_difference "ActingFor::AuditEvent.count", 1 do
-        assert_equal :deny, call_for(@expensive).decision.status
+        result = call_for(@expensive)
+        assert_equal :deny, result.decision.status
+        assert_equal :no_matching_delegation, result.decision.reason_code
+        assert_equal result.decision.reason_code.to_s, ActingFor::AuditEvent.last.reason_code
       end
     end
   end
@@ -49,6 +56,8 @@ class ShoppingAgentPurchaseTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Trusted Amount"
     assert_includes response.body, "¥5,000"
     assert_includes response.body, "DENY"
+    assert_includes response.body, "Decision Reason"
+    assert_includes response.body, "no_matching_delegation"
     assert_equal({ "amount" => 5_000 }, ActingFor::AuditEvent.last.sanitized_context)
   end
 

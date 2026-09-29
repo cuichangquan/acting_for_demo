@@ -14,8 +14,8 @@ WORKDIR $APP_HOME
 
 COPY Gemfile Gemfile.lock ./
 
-# ActingFor is fetched from its public GitHub repository at the exact commit
-# pinned by Gemfile / Gemfile.lock.
+# ActingFor is installed from the released RubyGems dependency locked by
+# Gemfile / Gemfile.lock.
 RUN bundle install && \
     rm -rf /usr/local/bundle/cache
 
