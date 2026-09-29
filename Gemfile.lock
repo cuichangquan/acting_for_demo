@@ -3,14 +3,14 @@ GIT
   revision: 7578bb541cea5a49e79c1590abcac740e9f65d4b
   ref: 7578bb541cea5a49e79c1590abcac740e9f65d4b
   specs:
-
-GEM
-  remote: https://rubygems.org/
-  specs:
     acting_for (0.1.0)
       activerecord (>= 8.0, < 8.2)
       activesupport (>= 8.0, < 8.2)
       railties (>= 8.0, < 8.2)
+
+GEM
+  remote: https://rubygems.org/
+  specs:
     actioncable (8.0.5.1)
       actionpack (= 8.0.5.1)
       activesupport (= 8.0.5.1)
