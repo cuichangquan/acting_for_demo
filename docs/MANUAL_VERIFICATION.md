@@ -6,7 +6,7 @@ Status: **COMPLETED — Scenarios 1–11 human-verified. Full Human Manual Verif
 
 ## Next-release Decision reason_code verification
 
-Status: **AUTOMATED PASS / HUMAN BROWSER VERIFICATION PENDING**
+Status: **AUTOMATED PASS / HUMAN BROWSER VERIFICATION PASS**
 
 This is a focused follow-up for the unreleased `Decision#reason_code` Public API. It does not replace or rewrite the completed v0.1.0 Scenarios 1–11 record below.
 
@@ -40,7 +40,36 @@ Purchase: NOT EXECUTED
 
 Then open **ActingFor Audit Events** and confirm that each persisted `Reason` String matches the reason shown by the Decision result screen.
 
-Until a human performs this focused browser pass, record it as **PENDING**, not PASS.
+Human browser verification completed on 2026-09-29 against the feature branch. The observed result screens were:
+
+```text
+¥800:
+Decision: ALLOW
+Decision Reason: delegation_allowed
+Purchase: EXECUTED
+
+¥2,000:
+Decision: REQUIRE APPROVAL
+Decision Reason: delegation_requires_approval
+Purchase: NOT EXECUTED
+
+¥5,000:
+Decision: DENY
+Decision Reason: no_matching_delegation
+Purchase: NOT EXECUTED
+```
+
+The Audit Events screen showed matching persisted reasons for all three requests:
+
+```text
+Product#1 / ALLOW            / delegation_allowed
+Product#2 / REQUIRE APPROVAL / delegation_requires_approval
+Product#3 / DENY             / no_matching_delegation
+```
+
+Matched Delegations were `[1]`, `[2]`, and `[]` respectively. The Executed Purchases screen contained only the ¥800 Shopping Agent purchase, confirming that `require_approval` and `deny` did not execute the business action.
+
+Focused next-release Human Browser Verification: **PASS**.
 
 ## Environment Record
 
