@@ -2,7 +2,7 @@
 
 This is the official hands-on reference application for [ActingFor](https://github.com/cuichangquan/acting_for). It shows how ActingFor's public API fits into a real Rails host application and provides automated integration verification plus an environment for human manual verification.
 
-> **Verification note:** ActingFor 0.1.1 is published on RubyGems. This branch verifies the released `Decision#reason_code` Public API through the same host-application integration that was used for the pre-release candidate.
+> **Verification note:** ActingFor 0.1.1 is published on RubyGems. The demo verifies the released `Decision#reason_code` Public API and now includes a minimal MCP Streamable HTTP reference path to the same host authorization boundary.
 
 ## Repository responsibilities
 
@@ -34,6 +34,7 @@ Problems found through demo integration are reported back to ActingFor as issues
 - Automatic ActingFor authorization audit
 - Direct human purchases compared with delegated-agent purchases
 - A host-built Delegation Settings screen using ActingFor's public API
+- A minimal MCP `purchase_product(product_id)` tool routed through the same `ShoppingAgentPurchase` host service
 
 ## Delegated purchase flow
 
@@ -137,6 +138,24 @@ After a Shopping Agent request, the result screen shows both the Decision and it
 The Human buttons intentionally do not call `ActingFor.authorize` and do not create `ActingFor::AuditEvent` records. The demo assumes Demo User has host permission for every product; a production application must perform its own authorization for direct human actions.
 
 The browser-accessible Delegation Settings screen changes the two demo limits and shows how delegated authority changes agent outcomes. It revokes existing demo Delegations and creates replacements through `ActingFor.delegate` in a database transaction. It is an example UI owned by this host Rails application—not an admin UI supplied by ActingFor v0.1.
+
+## MCP reference path
+
+The demo includes one deliberately small MCP path:
+
+```text
+MCP Client
+   ↓ Streamable HTTP
+POST /mcp
+   ↓
+PurchaseProductTool
+   ↓
+ShoppingAgentPurchase
+   ↓
+ActingFor.authorize(...)
+```
+
+The tool accepts only `product_id`. Rails resolves the demo Agent and Principal through a development-only resolver and reloads `Product#price` from PostgreSQL; the MCP caller cannot supply the authorization amount. The full design and security boundary are documented in [MCP reference integration design](docs/AGENT_INTEGRATION.md).
 
 ## Requirements
 
