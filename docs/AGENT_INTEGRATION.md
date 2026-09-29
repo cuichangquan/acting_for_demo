@@ -51,6 +51,97 @@ The first MCP reference integration does not provide:
 
 The MCP transport/library choice is intentionally separate from ActingFor Core and may be changed without changing delegated-authorization semantics.
 
+## Selected MCP implementation
+
+For the first reference implementation, use the **official MCP Ruby SDK**:
+
+```ruby
+gem "mcp", "~> 1.6"
+```
+
+The current selected baseline is MCP Ruby SDK **1.6.x**. The lockfile should pin the exact resolved version when implementation begins.
+
+Use **Streamable HTTP through a Rails controller**, not a standalone stdio server and not the boot-time mounted server, for this first demo.
+
+Conceptually:
+
+```text
+Real MCP client
+      ↓ Streamable HTTP
+POST /mcp
+      ↓
+McpController
+      ├─ authenticate / establish trusted caller context
+      ├─ resolve ActingFor::Agent
+      ├─ resolve Principal
+      └─ create MCP::Server with request-specific server_context
+              ↓
+      PurchaseProductTool
+              ↓
+      ShoppingAgentPurchase
+              ↓
+          ActingFor
+```
+
+### Why the official Ruby SDK
+
+- It is the protocol project's official Ruby SDK rather than a Rails-specific third-party MCP implementation.
+- It supports both MCP server and client functionality.
+- It supports Streamable HTTP and Rails integration directly.
+- It provides `server_context` for request-specific trusted state.
+- The integration remains replaceable: ActingFor Core still receives only `agent`, `principal`, `action`, `resource`, and trusted `context`.
+
+### Why the Rails controller pattern
+
+The first demo needs request-specific identity state more than long-lived MCP subscription features.
+
+A Rails controller can:
+
+1. authenticate or establish the caller context for each HTTP request
+2. resolve the local `ActingFor::Agent`
+3. resolve the Principal
+4. place only trusted resolved objects/identifiers in MCP `server_context`
+5. create a stateless MCP transport for that request
+
+The first implementation should configure the HTTP transport as stateless and should not advertise/serve long-lived subscription listening.
+
+This deliberately trades advanced MCP streaming/subscription features for a smaller and clearer trust boundary in the reference demo.
+
+### Initial endpoint shape
+
+```ruby
+# config/routes.rb
+post "/mcp", to: "mcp#create"
+```
+
+Pseudo-code only:
+
+```ruby
+class McpController < ActionController::API
+  def create
+    trusted_context = authenticate_and_resolve!
+
+    server = MCP::Server.new(
+      name: "acting_for_demo",
+      version: "1.0.0",
+      tools: [PurchaseProductTool],
+      server_context: trusted_context
+    )
+
+    transport = MCP::Server::Transports::StreamableHTTPTransport.new(
+      server,
+      stateless: true,
+      serve_subscriptions_listen: false
+    )
+
+    status, headers, body = transport.handle_request(request)
+    render json: body.first, status:, headers:
+  end
+end
+```
+
+The exact authentication mechanism remains outside this first implementation decision. A development-only resolver may be used initially, but it must be isolated behind a resolver boundary and labeled as non-production authentication.
+
 ## Existing boundary to reuse
 
 The current demo already has the correct host service boundary:
