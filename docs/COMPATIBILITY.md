@@ -9,13 +9,13 @@ This document records which ActingFor version or exact commit has been verified 
 | `e87ef0418d7938443ca3ad9fca109538e8db045b` | RubyGems `acting_for` `0.1.0` | PASS (17 runs, 94 assertions, 0 failures, 0 errors, 0 skips) | NOT YET COMPLETED |
 | `fd4846a7f9e6301bfcfd1cef9e889e4442fe05be` | RubyGems `acting_for` `0.1.0` | PASS (18 runs, 108 assertions, 0 failures, 0 errors, 0 skips) | NOT YET COMPLETED |
 | `32058147b6527ce46486c523e9a8d036760ca372` | RubyGems `acting_for` `0.1.0` | PASS (18 runs, 108 assertions, 0 failures, 0 errors, 0 skips) | PASS: Scenarios 1–11 human verified; full human completion recorded 2026-09-23 |
-| `c65b0dea12f3f693239fc332f699d01395cc3603` | `7578bb541cea5a49e79c1590abcac740e9f65d4b` (`Decision#reason_code` candidate) | PASS (18 runs, 118 assertions, 0 failures, 0 errors, 0 skips; Actions run `36521205881`) | PENDING: focused next-release reason_code browser verification |
+| `f1b2d87a635bee8b3b43556079ae6f4decf8774e` | `7578bb541cea5a49e79c1590abcac740e9f65d4b` (`Decision#reason_code` candidate) | PASS (18 runs, 118 assertions, 0 failures, 0 errors, 0 skips; Actions run `36521481895`) | PENDING: focused next-release reason_code browser verification |
 
 ## Next-release Decision reason_code candidate
 
 The Demo feature branch temporarily pins ActingFor commit `7578bb541cea5a49e79c1590abcac740e9f65d4b`. This commit contains the implemented `Decision#reason_code` API and had already passed the ActingFor core matrix before Demo verification.
 
-Automated integration verification ran against Demo revision `c65b0dea12f3f693239fc332f699d01395cc3603` in GitHub Actions run `36521205881` and passed:
+Automated integration verification ran against Demo revision `f1b2d87a635bee8b3b43556079ae6f4decf8774e` in GitHub Actions run `36521481895` and passed:
 
 ```text
 Decision reason_code: no_matching_delegation
