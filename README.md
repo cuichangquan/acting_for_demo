@@ -196,7 +196,7 @@ gem "acting_for", "~> 0.1.1"
 - [Architecture](docs/ARCHITECTURE.md)
 - [Compatibility](docs/COMPATIBILITY.md)
 - [Manual verification checklist](docs/MANUAL_VERIFICATION.md)
-- [Future agent integration](docs/AGENT_INTEGRATION.md)
+- [MCP reference integration design](docs/AGENT_INTEGRATION.md)
 
 ## Tests
 
