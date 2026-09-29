@@ -4,20 +4,34 @@ This document distinguishes human-observed verification from Codex-assisted veri
 
 Status: **COMPLETED — Scenarios 1–11 human-verified. Full Human Manual Verification: PASS.**
 
-## Next-release Decision reason_code verification
+## Decision reason_code verification — released in 0.1.1
 
-Status: **AUTOMATED PASS / HUMAN BROWSER VERIFICATION PASS**
+Status: **PUBLISHED-GEM AUTOMATED + SMOKE PASS / PRE-RELEASE HUMAN BROWSER PASS**
 
-This is a focused follow-up for the unreleased `Decision#reason_code` Public API. It does not replace or rewrite the completed v0.1.0 Scenarios 1–11 record below.
+This focused verification covers the `Decision#reason_code` Public API released in ActingFor 0.1.1. It does not replace or rewrite the completed v0.1.0 Scenarios 1–11 record below. Human browser verification was completed on the pre-release candidate; after publication, the released RubyGems artifact was re-verified automatically and by HTTP smoke test.
 
-Candidate:
+Pre-release candidate evidence:
 
 ```text
 ActingFor commit: 7578bb541cea5a49e79c1590abcac740e9f65d4b
 Demo automated-verification revision: f1b2d87a635bee8b3b43556079ae6f4decf8774e
 GitHub Actions run: 36521481895
 Automated result: 18 runs / 118 assertions / 0 failures / 0 errors / 0 skips
+Human browser result: PASS
 ```
+
+Published 0.1.1 post-release evidence:
+
+```text
+ActingFor source: RubyGems 0.1.1
+Demo verification revision: b784cd268db72e66626dac4d499891b4809f7969
+GitHub Actions run: 36528758797
+Installed version: 0.1.1
+Automated result: 18 runs / 118 assertions / 0 failures / 0 errors / 0 skips
+Smoke HTTP: PASS
+```
+
+The published-gem pass did not repeat the human browser workflow. The human evidence below remains explicitly attributed to the pre-release candidate.
 
 For the human browser pass, start the feature branch from a clean Docker state and verify these three Shopping Agent requests:
 
@@ -69,7 +83,7 @@ Product#3 / DENY             / no_matching_delegation
 
 Matched Delegations were `[1]`, `[2]`, and `[]` respectively. The Executed Purchases screen contained only the ¥800 Shopping Agent purchase, confirming that `require_approval` and `deny` did not execute the business action.
 
-Focused next-release Human Browser Verification: **PASS**.
+Focused `Decision#reason_code` Human Browser Verification: **PASS** on the pre-release candidate.
 
 ## Environment Record
 
