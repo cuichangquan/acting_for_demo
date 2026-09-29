@@ -1,0 +1,68 @@
+name: Verify released acting_for 0.1.1 in Demo
+
+on:
+  push:
+    branches:
+      - feature/decision-reason-code
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Demo
+        uses: actions/checkout@v6
+
+      - name: Verify released dependency
+        run: |
+          set -euo pipefail
+          grep -F 'gem "acting_for", "~> 0.1.1"' Gemfile
+          grep -F 'acting_for (0.1.1)' Gemfile.lock
+          grep -F 'acting_for (~> 0.1.1)' Gemfile.lock
+          grep -F 'acting_for (0.1.1) sha256=57ceb266285a0970af79c3ad745171638799b00b6d8617bf9ecfc13382819c29' Gemfile.lock
+          if grep -F 'github.com/cuichangquan/acting_for' Gemfile.lock; then
+            echo "Unexpected Git source in released dependency lockfile"
+            exit 1
+          fi
+
+      - name: Build Demo
+        run: docker compose build
+
+      - name: Prepare Demo databases
+        run: docker compose run --rm app bin/setup --skip-server
+
+      - name: Verify installed ActingFor
+        run: |
+          docker compose run --rm app ruby -e '
+            require "acting_for"
+            raise "unexpected version #{ActingFor::VERSION}" unless ActingFor::VERSION == "0.1.1"
+            decision = ActingFor::Decision.new(:deny)
+            raise "unexpected reason_code #{decision.reason_code.inspect}" unless decision.reason_code == :no_matching_delegation
+            puts "ActingFor version: #{ActingFor::VERSION}"
+            puts "Decision reason_code: #{decision.reason_code}"
+          '
+
+      - name: Run automated integration tests
+        run: docker compose run --rm app bin/rails test
+
+      - name: Start Demo for smoke verification
+        run: docker compose up -d
+
+      - name: Smoke verify HTTP and UI
+        run: |
+          set -euo pipefail
+          for i in $(seq 1 30); do
+            if curl --fail --silent --show-error http://localhost:3000/ > /tmp/demo.html; then
+              break
+            fi
+            sleep 2
+          done
+          test -s /tmp/demo.html
+          grep -E 'ActingFor|Shopping Agent|Everyday Item' /tmp/demo.html
+          echo "Smoke HTTP: PASS"
+
+      - name: Cleanup
+        if: always()
+        run: docker compose down -v
