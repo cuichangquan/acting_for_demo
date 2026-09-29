@@ -1,6 +1,6 @@
 # MCP Reference Integration Design
 
-Status: **Design proposal / implementation not started**
+Status: **First runtime slice implemented on this branch / real external MCP-client verification pending**
 
 This document defines the next reference-integration step for the ActingFor Shopping Demo: connect a real MCP tool call to the existing Rails host boundary without changing ActingFor Core.
 
@@ -56,10 +56,10 @@ The MCP transport/library choice is intentionally separate from ActingFor Core a
 For the first reference implementation, use the **official MCP Ruby SDK**:
 
 ```ruby
-gem "mcp", "~> 1.6"
+gem "mcp", "~> 1.6.1"
 ```
 
-The current selected baseline is MCP Ruby SDK **1.6.x**. The lockfile should pin the exact resolved version when implementation begins.
+The selected baseline is MCP Ruby SDK **1.6.x**. `Gemfile.lock` currently resolves **1.6.1**.
 
 Use **Streamable HTTP through a Rails controller**, not a standalone stdio server and not the boot-time mounted server, for this first demo.
 
@@ -114,7 +114,7 @@ This deliberately trades advanced MCP streaming/subscription features for a smal
 post "/mcp", to: "mcp#create"
 ```
 
-Pseudo-code only:
+Implemented shape:
 
 ```ruby
 class McpController < ActionController::API
@@ -134,13 +134,29 @@ class McpController < ActionController::API
       serve_subscriptions_listen: false
     )
 
-    status, headers, body = transport.handle_request(request)
-    render json: body.first, status:, headers:
+    status, response_headers, body = transport.handle_request(request)
+    response_headers.each { |key, value| response.set_header(key, value) }
+    self.status = status
+    self.response_body = body
   end
 end
 ```
 
 The exact authentication mechanism remains outside this first implementation decision. A development-only resolver may be used initially, but it must be isolated behind a resolver boundary and labeled as non-production authentication.
+
+## Implemented first slice
+
+The branch currently contains:
+
+- `POST /mcp` handled by `McpController`
+- stateless Streamable HTTP with JSON responses
+- `PurchaseProductTool` as the only MCP tool
+- `DemoMcpIdentityResolver` as an explicitly development-only host identity boundary
+- routing from the MCP tool to the existing `ShoppingAgentPurchase` service
+- host integration tests for tool discovery, `allow`, `require_approval`, `deny`, and forged extra arguments
+- MCP Ruby SDK 1.6.1 locked in `Gemfile.lock`
+
+Automated Demo CI has exercised the new MCP integration together with the existing browser integration. The remaining verification item for this reference step is a manual call from a real external MCP client.
 
 ## Existing boundary to reuse
 
