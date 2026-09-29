@@ -1,0 +1,32 @@
+name: Generate MCP lockfile
+
+on:
+  push:
+    branches:
+      - docs/mcp-reference-integration-design
+
+permissions:
+  contents: read
+
+jobs:
+  lockfile:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Demo
+        uses: actions/checkout@v6
+
+      - name: Build Demo image
+        run: docker compose build
+
+      - name: Resolve MCP dependency into lockfile
+        run: docker compose run --rm app bundle lock --update mcp
+
+      - name: Show resolved MCP dependencies
+        run: |
+          grep -E '^(    mcp|    json_schemer|    hana|    regexp_parser|    simpleidn|  mcp )' Gemfile.lock || true
+
+      - name: Upload generated lockfile
+        uses: actions/upload-artifact@v4
+        with:
+          name: mcp-gemfile-lock
+          path: Gemfile.lock
