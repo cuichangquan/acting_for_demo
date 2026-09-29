@@ -1,6 +1,6 @@
 # ActingFor Demo Compatibility
 
-This document records which ActingFor version or exact commit has been verified with this demo application. ActingFor 0.1.0 is released on RubyGems and remains the dependency on `main`. The `feature/decision-reason-code` branch temporarily pins an exact unreleased ActingFor commit for next-release integration verification.
+This document records which ActingFor version or exact commit has been verified with this demo application. ActingFor 0.1.1 is released on RubyGems. The `feature/decision-reason-code` branch now resolves the released `acting_for 0.1.1`; the earlier exact-Git candidate remains documented below as pre-release evidence.
 
 | Demo revision | ActingFor source | Automated verification | Human Manual Verification |
 | --- | --- | --- | --- |
@@ -10,10 +10,11 @@ This document records which ActingFor version or exact commit has been verified 
 | `fd4846a7f9e6301bfcfd1cef9e889e4442fe05be` | RubyGems `acting_for` `0.1.0` | PASS (18 runs, 108 assertions, 0 failures, 0 errors, 0 skips) | NOT YET COMPLETED |
 | `32058147b6527ce46486c523e9a8d036760ca372` | RubyGems `acting_for` `0.1.0` | PASS (18 runs, 108 assertions, 0 failures, 0 errors, 0 skips) | PASS: Scenarios 1–11 human verified; full human completion recorded 2026-09-23 |
 | `f1b2d87a635bee8b3b43556079ae6f4decf8774e` | `7578bb541cea5a49e79c1590abcac740e9f65d4b` (`Decision#reason_code` candidate) | PASS (18 runs, 118 assertions, 0 failures, 0 errors, 0 skips; Actions run `36521481895`) | PASS: focused reason_code browser verification completed 2026-09-29 |
+| `b784cd268db72e66626dac4d499891b4809f7969` | RubyGems `acting_for` `0.1.1` | PASS (18 runs, 118 assertions, 0 failures, 0 errors, 0 skips; smoke PASS; Actions run `36528758797`) | Published-gem human rerun not repeated; focused reason_code human browser PASS is preserved from the verified candidate |
 
-## Next-release Decision reason_code candidate
+## Decision reason_code 0.1.1 release verification
 
-The Demo feature branch temporarily pins ActingFor commit `7578bb541cea5a49e79c1590abcac740e9f65d4b`. This commit contains the implemented `Decision#reason_code` API and had already passed the ActingFor core matrix before Demo verification.
+Pre-release verification used exact ActingFor commit `7578bb541cea5a49e79c1590abcac740e9f65d4b`. After ActingFor 0.1.1 was published, the Demo dependency was switched to RubyGems `~> 0.1.1`; `Gemfile.lock` resolves `acting_for (0.1.1)` from RubyGems with SHA256 `57ceb266285a0970af79c3ad745171638799b00b6d8617bf9ecfc13382819c29`.
 
 Automated integration verification ran against Demo revision `f1b2d87a635bee8b3b43556079ae6f4decf8774e` in GitHub Actions run `36521481895` and passed:
 
@@ -32,7 +33,22 @@ Focused human browser verification completed on 2026-09-29 and passed for all th
 
 The browser verification was performed from the feature branch after the automated candidate pass; subsequent branch-only changes between the automated behavior revision and the browser pass were documentation / temporary-workflow cleanup and did not change application behavior. The earlier v0.1.0 Scenarios 1–11 human PASS remains separate historical evidence.
 
-## Released gem verification
+Post-release verification then ran against released RubyGems `acting_for 0.1.1` at Demo revision `b784cd268db72e66626dac4d499891b4809f7969` in GitHub Actions run `36528758797`:
+
+```text
+ActingFor version: 0.1.1
+Decision reason_code: no_matching_delegation
+18 runs
+118 assertions
+0 failures
+0 errors
+0 skips
+Smoke HTTP: PASS
+```
+
+This verifies that the published gem—not the temporary Git candidate—boots in the Demo, exposes the expected Public API, passes the Demo integration suite, and serves the browser UI. The focused human browser pass was not repeated after publication; its pre-release evidence is preserved separately rather than relabeled as post-release human evidence.
+
+## Released 0.1.0 historical verification
 
 The demo dependency targets RubyGems `acting_for` `~> 0.1.0` and resolves to version `0.1.0` in `Gemfile.lock`.
 
@@ -60,8 +76,12 @@ The detailed evidence and classification are recorded in `docs/MANUAL_VERIFICATI
 
 ## Current verification environment
 
-- Verification completion date: 2026-09-23
-- ActingFor: RubyGems 0.1.0
+- Latest post-release verification date: 2026-09-29
+- ActingFor: RubyGems 0.1.1
+- Published-gem automated integration: PASS — 18 runs / 118 assertions / 0 failures / 0 errors / 0 skips
+- Published-gem smoke verification: PASS
+- Focused `reason_code` human browser verification: PASS on the pre-release candidate; not repeated after publication
+- Historical full v0.1.0 human completion date: 2026-09-23
 - Ruby: 3.4.10
 - Rails: 8.0.5.1
 - PostgreSQL: 16.15
@@ -84,7 +104,7 @@ If demo integration reveals a bug or API problem, treat it as feedback for an Ac
 For released v0.1.x integration, use the RubyGems version requirement:
 
 ```ruby
-gem "acting_for", "~> 0.1.0"
+gem "acting_for", "~> 0.1.1"
 ```
 
 For an unreleased future release-candidate verification pass, an exact Git commit may be used temporarily and must be recorded explicitly in this file.
