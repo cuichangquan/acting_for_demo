@@ -19,7 +19,7 @@ jobs:
         run: docker compose build
 
       - name: Resolve MCP dependency into lockfile
-        run: docker compose run --rm app bundle lock --update mcp
+        run: docker compose run --rm app bundle lock
 
       - name: Show resolved MCP dependencies
         run: |
