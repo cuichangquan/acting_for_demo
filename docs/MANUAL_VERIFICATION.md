@@ -14,8 +14,8 @@ Candidate:
 
 ```text
 ActingFor commit: 7578bb541cea5a49e79c1590abcac740e9f65d4b
-Demo automated-verification revision: c65b0dea12f3f693239fc332f699d01395cc3603
-GitHub Actions run: 36521205881
+Demo automated-verification revision: f1b2d87a635bee8b3b43556079ae6f4decf8774e
+GitHub Actions run: 36521481895
 Automated result: 18 runs / 118 assertions / 0 failures / 0 errors / 0 skips
 ```
 
