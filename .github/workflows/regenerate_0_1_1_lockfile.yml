@@ -1,0 +1,34 @@
+name: Regenerate Demo lockfile for acting_for 0.1.1
+
+on:
+  push:
+    branches:
+      - feature/decision-reason-code
+
+permissions:
+  contents: read
+
+jobs:
+  lockfile:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.4"
+
+      - name: Regenerate acting_for lock entry
+        run: |
+          set -euo pipefail
+          bundle lock --update acting_for
+          grep -A4 -B2 'acting_for (0.1.1)' Gemfile.lock
+          grep -A10 '^DEPENDENCIES' Gemfile.lock
+
+      - name: Upload regenerated lockfile
+        uses: actions/upload-artifact@v4
+        with:
+          name: gemfile-lock-acting-for-0.1.1
+          path: Gemfile.lock
+          if-no-files-found: error
