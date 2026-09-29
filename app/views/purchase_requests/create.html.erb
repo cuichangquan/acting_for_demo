@@ -8,6 +8,7 @@
     <dt>Product</dt><dd><%= @result.product.name %></dd>
     <dt>Trusted Amount</dt><dd><%= number_to_currency(@result.product.price, unit: "¥", precision: 0) %></dd>
     <dt>ActingFor Decision</dt><dd><strong><%= status.tr("_", " ").upcase %></strong></dd>
+    <dt>Decision Reason</dt><dd><code><%= @result.decision.reason_code %></code></dd>
     <dt>Purchase</dt><dd><strong><%= @result.purchase ? "EXECUTED" : "NOT EXECUTED" %></strong></dd>
   </dl>
   <% if @result.decision.approval_required? %><p class="notice">Human approval workflow belongs to the host application. This demo intentionally stops before execution.</p><% end %>
