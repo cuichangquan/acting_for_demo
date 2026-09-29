@@ -2,7 +2,7 @@
 
 This is the official hands-on reference application for [ActingFor](https://github.com/cuichangquan/acting_for). It shows how ActingFor's public API fits into a real Rails host application and provides automated integration verification plus an environment for human manual verification.
 
-> **Release note:** ActingFor 0.1.0 is published on RubyGems. This demo uses the released `~> 0.1.0` dependency and records the exact resolved gem in `Gemfile.lock`.
+> **Verification note:** ActingFor 0.1.0 remains the latest published RubyGems release. This feature branch temporarily pins unreleased ActingFor commit `7578bb541cea5a49e79c1590abcac740e9f65d4b` to verify the next-release `Decision#reason_code` Public API before publication.
 
 ## Repository responsibilities
 
@@ -132,6 +132,8 @@ Host Business Logic               Shopping Agent
 | ¥2,000 | Purchase executed | REQUIRE APPROVAL → Not executed |
 | ¥5,000 | Purchase executed | DENY (fail closed) → Not executed |
 
+After a Shopping Agent request, the result screen shows both the Decision and its public `reason_code` (for example, `DENY` + `no_matching_delegation`). The Audit Events screen independently shows the persisted String reason for the same authorization decision.
+
 The Human buttons intentionally do not call `ActingFor.authorize` and do not create `ActingFor::AuditEvent` records. The demo assumes Demo User has host permission for every product; a production application must perform its own authorization for direct human actions.
 
 The browser-accessible Delegation Settings screen changes the two demo limits and shows how delegated authority changes agent outcomes. It revokes existing demo Delegations and creates replacements through `ActingFor.delegate` in a database transaction. It is an example UI owned by this host Rails application—not an admin UI supplied by ActingFor v0.1.
@@ -181,13 +183,13 @@ Stop containers without deleting database data using `docker compose down`. To c
 
 ## ActingFor dependency
 
-ActingFor is installed from RubyGems with:
+For this unreleased integration-verification branch, ActingFor is pinned to the exact candidate commit:
 
 ```ruby
-gem "acting_for", "~> 0.1.0"
+gem "acting_for", github: "cuichangquan/acting_for", ref: "7578bb541cea5a49e79c1590abcac740e9f65d4b"
 ```
 
-`Gemfile.lock` resolves the dependency to ActingFor `0.1.0`. The published gem SHA256 verified during the release process is `a7c3cfc97bf04445c04b8fc9cbe6be8a9aa433cfb8ba20b0da90f853b1336abd`.
+This temporary exact-ref dependency verifies `Decision#reason_code` before the next gem publication. After the new ActingFor version is released, the demo should switch back to a RubyGems version requirement and record the released artifact in `docs/COMPATIBILITY.md`.
 
 ## More documentation
 
