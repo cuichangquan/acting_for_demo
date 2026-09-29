@@ -1,6 +1,6 @@
 # ActingFor Demo Compatibility
 
-This document records which ActingFor version or exact commit has been verified with this demo application. ActingFor 0.1.0 is released on RubyGems; the current dependency target is the released gem.
+This document records which ActingFor version or exact commit has been verified with this demo application. ActingFor 0.1.0 is released on RubyGems and remains the dependency on `main`. The `feature/decision-reason-code` branch temporarily pins an exact unreleased ActingFor commit for next-release integration verification.
 
 | Demo revision | ActingFor source | Automated verification | Human Manual Verification |
 | --- | --- | --- | --- |
@@ -9,6 +9,26 @@ This document records which ActingFor version or exact commit has been verified 
 | `e87ef0418d7938443ca3ad9fca109538e8db045b` | RubyGems `acting_for` `0.1.0` | PASS (17 runs, 94 assertions, 0 failures, 0 errors, 0 skips) | NOT YET COMPLETED |
 | `fd4846a7f9e6301bfcfd1cef9e889e4442fe05be` | RubyGems `acting_for` `0.1.0` | PASS (18 runs, 108 assertions, 0 failures, 0 errors, 0 skips) | NOT YET COMPLETED |
 | `32058147b6527ce46486c523e9a8d036760ca372` | RubyGems `acting_for` `0.1.0` | PASS (18 runs, 108 assertions, 0 failures, 0 errors, 0 skips) | PASS: Scenarios 1–11 human verified; full human completion recorded 2026-09-23 |
+| `c65b0dea12f3f693239fc332f699d01395cc3603` | `7578bb541cea5a49e79c1590abcac740e9f65d4b` (`Decision#reason_code` candidate) | PASS (18 runs, 118 assertions, 0 failures, 0 errors, 0 skips; Actions run `36521205881`) | PENDING: focused next-release reason_code browser verification |
+
+## Next-release Decision reason_code candidate
+
+The Demo feature branch temporarily pins ActingFor commit `7578bb541cea5a49e79c1590abcac740e9f65d4b`. This commit contains the implemented `Decision#reason_code` API and had already passed the ActingFor core matrix before Demo verification.
+
+Automated integration verification ran against Demo revision `c65b0dea12f3f693239fc332f699d01395cc3603` in GitHub Actions run `36521205881` and passed:
+
+```text
+Decision reason_code: no_matching_delegation
+18 runs
+118 assertions
+0 failures
+0 errors
+0 skips
+```
+
+The Demo tests cover all three public reason codes and verify that the Decision Symbol reason matches the persisted AuditEvent String reason. The purchase-result screen also renders `Decision Reason` directly from `@result.decision.reason_code`.
+
+Human verification for this next-release UI addition is intentionally still marked **PENDING**. The earlier v0.1.0 Scenarios 1–11 human PASS remains historical evidence and is not rewritten as evidence for the new API.
 
 ## Released gem verification
 
