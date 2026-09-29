@@ -1,0 +1,48 @@
+name: Decision reason_code Integration Verification
+
+on:
+  push:
+    branches:
+      - feature/decision-reason-code
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout candidate
+        uses: actions/checkout@v6
+
+      - name: Verify exact ActingFor candidate dependency
+        run: |
+          set -euo pipefail
+          grep -F 'gem "acting_for", github: "cuichangquan/acting_for", ref: "7578bb541cea5a49e79c1590abcac740e9f65d4b"' Gemfile
+          grep -F 'revision: 7578bb541cea5a49e79c1590abcac740e9f65d4b' Gemfile.lock
+          grep -F 'ref: 7578bb541cea5a49e79c1590abcac740e9f65d4b' Gemfile.lock
+
+      - name: Build demo
+        run: docker compose build
+
+      - name: Prepare demo databases
+        run: docker compose run --rm app bin/setup --skip-server
+
+      - name: Verify reason_code Public API
+        run: |
+          docker compose run --rm app bin/rails runner '
+            decision = ActingFor::Decision.new(:deny)
+            raise "unexpected reason_code: #{decision.reason_code.inspect}" unless decision.reason_code == :no_matching_delegation
+            puts "Decision reason_code: #{decision.reason_code}"
+          '
+
+      - name: Run automated integration tests
+        run: docker compose run --rm app bin/rails test
+
+      - name: Cleanup
+        if: always()
+        run: docker compose down -v
