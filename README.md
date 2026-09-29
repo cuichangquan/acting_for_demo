@@ -2,7 +2,7 @@
 
 This is the official hands-on reference application for [ActingFor](https://github.com/cuichangquan/acting_for). It shows how ActingFor's public API fits into a real Rails host application and provides automated integration verification plus an environment for human manual verification.
 
-> **Verification note:** ActingFor 0.1.0 remains the latest published RubyGems release. This feature branch temporarily pins unreleased ActingFor commit `7578bb541cea5a49e79c1590abcac740e9f65d4b` to verify the next-release `Decision#reason_code` Public API before publication.
+> **Verification note:** ActingFor 0.1.1 is published on RubyGems. This branch verifies the released `Decision#reason_code` Public API through the same host-application integration that was used for the pre-release candidate.
 
 ## Repository responsibilities
 
@@ -183,13 +183,13 @@ Stop containers without deleting database data using `docker compose down`. To c
 
 ## ActingFor dependency
 
-For this unreleased integration-verification branch, ActingFor is pinned to the exact candidate commit:
+The demo uses the released RubyGems dependency:
 
 ```ruby
-gem "acting_for", github: "cuichangquan/acting_for", ref: "7578bb541cea5a49e79c1590abcac740e9f65d4b"
+gem "acting_for", "~> 0.1.1"
 ```
 
-This temporary exact-ref dependency verifies `Decision#reason_code` before the next gem publication. After the new ActingFor version is released, the demo should switch back to a RubyGems version requirement and record the released artifact in `docs/COMPATIBILITY.md`.
+`Gemfile.lock` resolves `acting_for 0.1.1` from RubyGems and records the published gem checksum. The earlier exact-Git candidate dependency was used only for pre-release verification and is preserved in `docs/COMPATIBILITY.md` as historical evidence.
 
 ## More documentation
 
