@@ -4,6 +4,44 @@ This document distinguishes human-observed verification from Codex-assisted veri
 
 Status: **COMPLETED — Scenarios 1–11 human-verified. Full Human Manual Verification: PASS.**
 
+## Next-release Decision reason_code verification
+
+Status: **AUTOMATED PASS / HUMAN BROWSER VERIFICATION PENDING**
+
+This is a focused follow-up for the unreleased `Decision#reason_code` Public API. It does not replace or rewrite the completed v0.1.0 Scenarios 1–11 record below.
+
+Candidate:
+
+```text
+ActingFor commit: 7578bb541cea5a49e79c1590abcac740e9f65d4b
+Demo automated-verification revision: c65b0dea12f3f693239fc332f699d01395cc3603
+GitHub Actions run: 36521205881
+Automated result: 18 runs / 118 assertions / 0 failures / 0 errors / 0 skips
+```
+
+For the human browser pass, start the feature branch from a clean Docker state and verify these three Shopping Agent requests:
+
+```text
+¥800:
+Decision: ALLOW
+Decision Reason: delegation_allowed
+Purchase: EXECUTED
+
+¥2,000:
+Decision: REQUIRE APPROVAL
+Decision Reason: delegation_requires_approval
+Purchase: NOT EXECUTED
+
+¥5,000:
+Decision: DENY
+Decision Reason: no_matching_delegation
+Purchase: NOT EXECUTED
+```
+
+Then open **ActingFor Audit Events** and confirm that each persisted `Reason` String matches the reason shown by the Decision result screen.
+
+Until a human performs this focused browser pass, record it as **PENDING**, not PASS.
+
 ## Environment Record
 
 ```text
