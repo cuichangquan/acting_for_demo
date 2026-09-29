@@ -6,7 +6,7 @@ on:
       - feature/decision-reason-code
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   lockfile:
@@ -25,6 +25,19 @@ jobs:
           bundle lock --update acting_for
           grep -A4 -B2 'acting_for (0.1.1)' Gemfile.lock
           grep -A10 '^DEPENDENCIES' Gemfile.lock
+
+      - name: Commit regenerated lockfile
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Gemfile.lock
+          if git diff --cached --quiet; then
+            echo "Gemfile.lock already current."
+          else
+            git commit -m "chore: lock acting_for 0.1.1 [skip ci]"
+            git push origin HEAD:feature/decision-reason-code
+          fi
 
       - name: Upload regenerated lockfile
         uses: actions/upload-artifact@v4
