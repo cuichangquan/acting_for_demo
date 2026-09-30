@@ -1,6 +1,7 @@
 Rails.application.routes.draw do
   root "shop#index"
   post "purchase_requests", to: "purchase_requests#create"
+  post "mcp", to: "mcp#create"
   post "human_purchases", to: "human_purchases#create"
   resource :delegation_settings, only: [:show, :update] do
     post :reset

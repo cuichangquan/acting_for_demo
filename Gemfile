@@ -3,6 +3,7 @@ source "https://rubygems.org"
 # Bundle edge Rails instead: gem "rails", github: "rails/rails", branch: "main"
 gem "rails", "~> 8.0.5", ">= 8.0.5.1"
 gem "acting_for", "~> 0.1.1"
+gem "mcp", "~> 1.6.1"
 # Rails 8.0 uses JSON APIs removed in JSON 3.
 gem "json", "< 3"
 # The modern asset pipeline for Rails [https://github.com/rails/propshaft]
@@ -16,6 +17,8 @@ gem "puma", ">= 5.0"
 gem "tzinfo-data", platforms: %i[ windows jruby ]
 
 group :development, :test do
+  # HTTP transport dependency used by the standalone MCP verification client.
+  gem "faraday", ">= 2.0"
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
   gem "debug", platforms: %i[ mri windows ], require: "debug/prelude"
 end
