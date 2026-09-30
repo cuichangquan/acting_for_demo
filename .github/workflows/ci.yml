@@ -47,6 +47,17 @@ jobs:
           grep -E 'ActingFor|Shopping Agent|Everyday Item' /tmp/demo.html
           echo "Smoke HTTP: PASS"
 
+      - name: Verify with official MCP HTTP client
+        run: |
+          set -euo pipefail
+          ALLOW_ID=$(docker compose exec -T app bin/rails runner 'print Product.find_by!(name: "Everyday Item").id')
+          APPROVAL_ID=$(docker compose exec -T app bin/rails runner 'print Product.find_by!(name: "Approval Item").id')
+          DENY_ID=$(docker compose exec -T app bin/rails runner 'print Product.find_by!(name: "Expensive Item").id')
+
+          docker compose exec -T app ruby script/mcp_client_verify.rb \
+            http://127.0.0.1:3000/mcp \
+            "$ALLOW_ID" "$APPROVAL_ID" "$DENY_ID"
+
       - name: Cleanup
         if: always()
         run: docker compose down -v
