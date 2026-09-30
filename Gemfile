@@ -17,6 +17,8 @@ gem "puma", ">= 5.0"
 gem "tzinfo-data", platforms: %i[ windows jruby ]
 
 group :development, :test do
+  # HTTP transport dependency used by the standalone MCP verification client.
+  gem "faraday", ">= 2.0"
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
   gem "debug", platforms: %i[ mri windows ], require: "debug/prelude"
 end
