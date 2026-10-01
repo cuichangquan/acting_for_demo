@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_09_19_020000) do
+ActiveRecord::Schema[8.0].define(version: 2026_10_01_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -59,6 +59,15 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_19_020000) do
     t.check_constraint "resource_type IS NOT NULL OR resource_id IS NULL", name: "chk_acting_for_delegations_resource_scope"
   end
 
+  create_table "agent_credentials", force: :cascade do |t|
+    t.bigint "agent_id", null: false
+    t.string "token_digest", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["agent_id"], name: "index_agent_credentials_on_agent_id"
+    t.index ["token_digest"], name: "index_agent_credentials_on_token_digest", unique: true
+  end
+
   create_table "products", force: :cascade do |t|
     t.string "name"
     t.integer "price"
@@ -85,6 +94,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_19_020000) do
   end
 
   add_foreign_key "acting_for_delegations", "acting_for_agents", column: "agent_id"
+  add_foreign_key "agent_credentials", "acting_for_agents", column: "agent_id"
   add_foreign_key "purchases", "products"
   add_foreign_key "purchases", "users"
 end

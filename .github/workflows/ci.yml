@@ -8,6 +8,9 @@ on:
 permissions:
   contents: read
 
+env:
+  DEMO_MCP_BEARER_TOKEN: acting-for-demo-shopping-agent-token
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -47,7 +50,7 @@ jobs:
           grep -E 'ActingFor|Shopping Agent|Everyday Item' /tmp/demo.html
           echo "Smoke HTTP: PASS"
 
-      - name: Verify with official MCP HTTP client
+      - name: Verify with official MCP HTTP client and Bearer auth
         run: |
           set -euo pipefail
           ALLOW_ID=$(docker compose exec -T app bin/rails runner 'print Product.find_by!(name: "Everyday Item").id')
@@ -56,6 +59,7 @@ jobs:
 
           docker compose exec -T app ruby script/mcp_client_verify.rb \
             http://127.0.0.1:3000/mcp \
+            "$DEMO_MCP_BEARER_TOKEN" \
             "$ALLOW_ID" "$APPROVAL_ID" "$DENY_ID"
 
       - name: Cleanup

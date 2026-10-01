@@ -5,6 +5,9 @@ class McpPurchaseProductTest < ActionDispatch::IntegrationTest
   setup do
     @principal = User.create!(name: "Demo User")
     @agent = ActingFor::Agent.create!(identifier: "shopping-agent", name: "Shopping Agent")
+    @bearer_token = "test-shopping-agent-bearer-token"
+    AgentCredential.issue!(agent: @agent, token: @bearer_token)
+
     @everyday = Product.create!(name: "Everyday Item", price: 800)
     @approval = Product.create!(name: "Approval Item", price: 2_000)
     @expensive = Product.create!(name: "Expensive Item", price: 5_000)
@@ -31,7 +34,26 @@ class McpPurchaseProductTest < ActionDispatch::IntegrationTest
     )
   end
 
-  test "lists purchase_product as the only MCP tool" do
+  test "requires a bearer token before entering the MCP transport" do
+    assert_no_difference ["Purchase.count", "ActingFor::AuditEvent.count"] do
+      payload = mcp_request(method: "tools/list", token: nil)
+
+      assert_response :unauthorized
+      assert_nil payload
+      assert_equal 'Bearer realm="acting_for_demo_mcp"', response.headers["WWW-Authenticate"]
+    end
+  end
+
+  test "rejects an invalid bearer token before entering the MCP transport" do
+    assert_no_difference ["Purchase.count", "ActingFor::AuditEvent.count"] do
+      payload = mcp_request(method: "tools/list", token: "invalid-token")
+
+      assert_response :unauthorized
+      assert_nil payload
+    end
+  end
+
+  test "lists purchase_product as the only MCP tool for an authenticated agent" do
     payload = mcp_request(method: "tools/list")
 
     assert_response :success
@@ -79,9 +101,27 @@ class McpPurchaseProductTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "the bearer token determines the ActingFor agent" do
+    other_agent = ActingFor::Agent.create!(identifier: "other-agent", name: "Other Agent")
+    other_token = "other-agent-bearer-token"
+    AgentCredential.issue!(agent: other_agent, token: other_token)
+
+    assert_no_difference "Purchase.count" do
+      assert_difference "ActingFor::AuditEvent.count", 1 do
+        result = call_purchase_product(@everyday, token: other_token)
+
+        assert_equal "deny", result.fetch("status")
+        assert_equal "no_matching_delegation", result.fetch("reason_code")
+        assert_equal false, result.fetch("executed")
+      end
+    end
+
+    assert_equal "other-agent", ActingFor::AuditEvent.last.agent_identifier
+  end
+
   test "tool arguments cannot override trusted amount agent or principal" do
     assert_no_difference ["Purchase.count", "ActingFor::AuditEvent.count"] do
-      response = mcp_request(
+      response_payload = mcp_request(
         method: "tools/call",
         params: {
           name: "purchase_product",
@@ -94,26 +134,27 @@ class McpPurchaseProductTest < ActionDispatch::IntegrationTest
         }
       )
 
-      assert response["error"] || response.dig("result", "isError")
+      assert response_payload["error"] || response_payload.dig("result", "isError")
     end
   end
 
   private
 
-  def call_purchase_product(product)
-    response = mcp_request(
+  def call_purchase_product(product, token: @bearer_token)
+    response_payload = mcp_request(
       method: "tools/call",
       params: {
         name: "purchase_product",
         arguments: { product_id: product.id }
-      }
+      },
+      token:
     )
 
     assert_response :success
-    response.fetch("result").fetch("structuredContent")
+    response_payload.fetch("result").fetch("structuredContent")
   end
 
-  def mcp_request(method:, params: nil)
+  def mcp_request(method:, params: nil, token: @bearer_token)
     @mcp_request_id ||= 0
     @mcp_request_id += 1
 
@@ -124,13 +165,18 @@ class McpPurchaseProductTest < ActionDispatch::IntegrationTest
     }
     request_payload[:params] = params if params
 
+    headers = {
+      "Content-Type" => "application/json",
+      "Accept" => "application/json",
+      "MCP-Protocol-Version" => "2025-11-25"
+    }
+    headers["Authorization"] = "Bearer #{token}" if token
+
     post "/mcp",
       params: JSON.generate(request_payload),
-      headers: {
-        "Content-Type" => "application/json",
-        "Accept" => "application/json",
-        "MCP-Protocol-Version" => "2025-11-25"
-      }
+      headers: headers
+
+    return if response.body.blank?
 
     JSON.parse(response.body)
   end

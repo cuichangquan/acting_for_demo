@@ -2,12 +2,12 @@
 
 This is the official hands-on reference application for [ActingFor](https://github.com/cuichangquan/acting_for). It shows how ActingFor's public API fits into a real Rails host application and provides automated integration verification plus an environment for human manual verification.
 
-> **Verification note:** ActingFor 0.1.1 is published on RubyGems. The demo verifies the released `Decision#reason_code` Public API and now includes a minimal MCP Streamable HTTP reference path to the same host authorization boundary.
+> **Verification note:** ActingFor 0.1.1 is published on RubyGems. The demo verifies the released `Decision#reason_code` Public API and includes a minimal MCP Streamable HTTP reference path with host-owned Bearer Agent authentication.
 
 ## Repository responsibilities
 
 - **ActingFor:** authorization library and source of truth for gem behavior, its Public API, and its Security Contract.
-- **ActingFor Demo:** host-application example and integration-verification environment. It is the source of truth for demo usage, host integration, and the manual-verification workflow.
+- **ActingFor Demo:** host-application example and integration-verification environment. It is the source of truth for demo usage, host integration, Agent authentication reference code, and the manual-verification workflow.
 
 The demo does not duplicate the gem specification or replace ActingFor's core CI. `acting_for/test` formally tests gem internals, the Public API, and the Security Contract. `acting_for_demo/test` uses only the public API from a real host application and must not depend on `ActingFor::Internal::*`.
 
@@ -27,6 +27,7 @@ Problems found through demo integration are reported back to ActingFor as issues
 ## What this demonstrates
 
 - Principal and Agent separation
+- Host-owned Bearer Token authentication that resolves a caller to `ActingFor::Agent`
 - Delegation constraints and `allow`, `require_approval`, and `deny`
 - Fail Closed when no Delegation matches
 - A Context Trust Boundary: the host loads `Product#price` from PostgreSQL
@@ -139,14 +140,20 @@ The Human buttons intentionally do not call `ActingFor.authorize` and do not cre
 
 The browser-accessible Delegation Settings screen changes the two demo limits and shows how delegated authority changes agent outcomes. It revokes existing demo Delegations and creates replacements through `ActingFor.delegate` in a database transaction. It is an example UI owned by this host Rails application—not an admin UI supplied by ActingFor v0.1.
 
-## MCP reference path
+## MCP + Bearer Agent authentication reference path
 
-The demo includes one deliberately small MCP path:
+The demo includes one deliberately small authenticated MCP path:
 
 ```text
-MCP Client
-   ↓ Streamable HTTP
+MCP Client / AI Agent
+   ↓ Authorization: Bearer <token>
 POST /mcp
+   ↓
+DemoMcpIdentityResolver
+   ↓ token digest lookup
+AgentCredential
+   ↓
+ActingFor::Agent
    ↓
 PurchaseProductTool
    ↓
@@ -155,7 +162,13 @@ ShoppingAgentPurchase
 ActingFor.authorize(...)
 ```
 
-The tool accepts only `product_id`. Rails resolves the demo Agent and Principal through a development-only resolver and reloads `Product#price` from PostgreSQL; the MCP caller cannot supply the authorization amount. The full design and security boundary are documented in [MCP reference integration design](docs/AGENT_INTEGRATION.md).
+The Bearer token authenticates the Agent; it does **not** authorize a purchase. ActingFor still evaluates whether that authenticated Agent has a matching Delegation for the host-resolved Principal.
+
+The raw Bearer token is not stored in the database. `AgentCredential` stores a SHA-256 digest and maps it to the local `ActingFor::Agent`.
+
+The tool accepts only `product_id`. Rails resolves the Agent from the credential, resolves the Demo Principal on the host, and reloads `Product#price` from PostgreSQL. The MCP caller cannot supply the authorization amount, Agent ID, or Principal ID.
+
+The full design and security boundary are documented in [MCP + Bearer Agent Authentication reference integration](docs/AGENT_INTEGRATION.md).
 
 ## Requirements
 
@@ -176,6 +189,20 @@ docker compose up
 
 Open <http://localhost:3000>. `app` connects to the Compose `db` service; it does not use a PostgreSQL server on the Mac.
 
+For the local MCP reference only, Docker Compose provides this public development credential by default:
+
+```text
+acting-for-demo-shopping-agent-token
+```
+
+It is intentionally not a production secret. To use your own local token, set it **before** running setup so the same value is digested into the database:
+
+```sh
+export DEMO_MCP_BEARER_TOKEN="replace-with-a-local-random-token"
+docker compose run --rm app bin/setup --skip-server
+docker compose up
+```
+
 For optional database inspection from the Mac (for example, with TablePlus), use host `127.0.0.1`, port `5432`, user `postgres`, password `demo_password_not_for_production`, database `acting_for_demo_development`, and disable SSL. This development-only credential is defined by Compose and must not be reused outside this demo.
 
 The image installs the released ActingFor gem resolved by `Gemfile` / `Gemfile.lock`. No GitHub credentials, SSH agent, or SSH forwarding are required.
@@ -193,12 +220,17 @@ Stop containers without deleting database data using `docker compose down`. To c
 
 - Agent-supplied `amount` is not trusted or used for authorization.
 - Rails loads `Product` by `product_id` and supplies `product.price` as trusted Context.
-- ActingFor does not authenticate external agents. This demo uses a pre-provisioned local Agent record; external authentication and identity resolution belong to the host application.
-- ActingFor authorizes; it does not execute purchases.
+- The Demo host authenticates MCP Agents with a Bearer token and maps its digest to `ActingFor::Agent`.
+- A valid Bearer credential identifies the Agent; it does not grant ActingFor authority by itself.
+- Missing or invalid MCP Bearer credentials return HTTP `401` before delegated authorization.
+- Tool arguments cannot choose the Agent or Principal.
+- The Demo's Principal lookup is intentionally small and host-owned; a real multi-user application must resolve the Principal from its own trusted context.
+- ActingFor authorizes; it does not authenticate Agents or execute purchases.
 - `require_approval` is not `allow`. This demo stops without implementing approval.
 - Production applications must independently verify that the Principal itself is authorized to perform the operation. For simplicity, Demo User is assumed to have host permission for every product.
 - Direct human purchases bypass delegated authorization and therefore do not appear in ActingFor Audit Events.
 - Authorize close to execution; a Decision is not a reusable authorization token.
+- Production Bearer tokens require HTTPS, high entropy, and an appropriate rotation/revocation policy. The default Demo token must never be reused as a real secret.
 
 ## ActingFor dependency
 
@@ -215,7 +247,7 @@ gem "acting_for", "~> 0.1.1"
 - [Architecture](docs/ARCHITECTURE.md)
 - [Compatibility](docs/COMPATIBILITY.md)
 - [Manual verification checklist](docs/MANUAL_VERIFICATION.md)
-- [MCP reference integration design](docs/AGENT_INTEGRATION.md)
+- [MCP + Bearer Agent Authentication reference integration](docs/AGENT_INTEGRATION.md)
 
 ## Tests
 

@@ -1,13 +1,28 @@
 class DemoMcpIdentityResolver
-  # Development-only identity mapping for the local reference demo.
-  #
-  # This is intentionally not authentication. A production host must replace
-  # this boundary with a trusted identity source (OAuth/OIDC/API credentials,
-  # MCP authorization context, or another authenticated mechanism).
-  def self.resolve!
-    {
-      agent: ActingFor::Agent.find_by!(identifier: "shopping-agent"),
-      principal: User.find_by!(name: "Demo User")
-    }
+  class Unauthorized < StandardError; end
+
+  PRINCIPAL_NAME = "Demo User"
+  BEARER_PATTERN = /\ABearer[ \t]+([^\s]+)\z/i
+
+  class << self
+    def resolve!(authorization_header:)
+      token = extract_bearer_token!(authorization_header)
+      agent = AgentCredential.authenticate(token)
+      raise Unauthorized, "invalid bearer token" unless agent
+
+      {
+        agent:,
+        principal: User.find_by!(name: PRINCIPAL_NAME)
+      }
+    end
+
+    private
+
+    def extract_bearer_token!(authorization_header)
+      match = BEARER_PATTERN.match(authorization_header.to_s)
+      raise Unauthorized, "bearer token required" unless match
+
+      match[1]
+    end
   end
 end
