@@ -1,0 +1,69 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SERVER_NAME="${ACTING_FOR_DEMO_MCP_NAME:-acting-for-demo}"
+SERVER_URL="${ACTING_FOR_DEMO_MCP_URL:-http://127.0.0.1:3000/mcp}"
+TOKEN_ENV_VAR="ACTING_FOR_DEMO_TOKEN"
+DEFAULT_TOKEN="acting-for-demo-shopping-agent-token"
+
+if ! command -v codex >/dev/null 2>&1; then
+  echo "Codex CLI was not found in PATH." >&2
+  echo "Install or update Codex CLI using the current OpenAI instructions, then rerun this script." >&2
+  exit 1
+fi
+
+if codex mcp get "$SERVER_NAME" >/dev/null 2>&1; then
+  echo "MCP server '$SERVER_NAME' is already configured. No existing Codex configuration was changed."
+  codex mcp get "$SERVER_NAME"
+  echo
+  echo "If this entry is stale, remove it explicitly with: codex mcp remove $SERVER_NAME"
+  echo "Then rerun this script."
+else
+  echo "Adding MCP server '$SERVER_NAME' to Codex CLI..."
+  codex mcp add "$SERVER_NAME" \
+    --url "$SERVER_URL" \
+    --bearer-token-env-var "$TOKEN_ENV_VAR"
+fi
+
+CHECK_TOKEN="${ACTING_FOR_DEMO_TOKEN:-$DEFAULT_TOKEN}"
+
+if command -v curl >/dev/null 2>&1; then
+  echo
+  echo "Checking the local MCP endpoint..."
+  if RESPONSE=$(curl --fail --silent --show-error \
+    -X POST "$SERVER_URL" \
+    -H "Authorization: Bearer $CHECK_TOKEN" \
+    -H "Content-Type: application/json" \
+    -H "Accept: application/json" \
+    -H "MCP-Protocol-Version: 2025-11-25" \
+    --data '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'); then
+    if [[ "$RESPONSE" == *'"list_products"'* && "$RESPONSE" == *'"purchase_product"'* ]]; then
+      echo "MCP connection check: PASS (list_products, purchase_product)"
+    else
+      echo "MCP endpoint responded, but the expected tools were not found." >&2
+      echo "$RESPONSE" >&2
+      exit 1
+    fi
+  else
+    echo "MCP connection check failed." >&2
+    echo "Confirm that 'docker compose up' is running and that $TOKEN_ENV_VAR matches the Demo Bearer token." >&2
+    exit 1
+  fi
+else
+  echo "curl was not found; skipped the MCP endpoint check."
+fi
+
+echo
+echo "Codex reads the Bearer token from $TOKEN_ENV_VAR when it starts."
+if [[ -z "${ACTING_FOR_DEMO_TOKEN:-}" ]]; then
+  echo "For the default local Demo credential, run:"
+  echo "  export ACTING_FOR_DEMO_TOKEN=\"$DEFAULT_TOKEN\""
+else
+  echo "$TOKEN_ENV_VAR is already set in this shell."
+fi
+
+echo
+echo "Then start Codex from this repository:"
+echo "  codex"
+echo
+echo "Try: 800円の商品を買って"
