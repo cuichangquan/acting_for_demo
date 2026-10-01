@@ -1,23 +1,31 @@
-# MCP Reference Integration
+# MCP + Bearer Agent Authentication Reference Integration
 
-Status: **Implemented and verified with the official MCP Ruby HTTP client**
+Status: **Implemented; verification runs through Demo CI**
 
-This document describes the MCP reference integration in the ActingFor Shopping Demo. The integration connects a real MCP client to the existing Rails host authorization boundary without adding MCP concepts to ActingFor Core.
+This document describes the Agent integration boundary in the ActingFor Shopping Demo. The Demo connects an MCP HTTP client to Rails, authenticates the calling Agent with a Bearer token, maps that identity to a local `ActingFor::Agent`, and then reuses the existing delegated-authorization boundary.
 
-ActingFor remains the source of truth for delegated-authorization behavior, Public API, and the Security Contract. The Demo is the source of truth for this host integration.
+ActingFor Core remains responsible only for delegated authorization. Authentication, MCP transport, Principal resolution, Resource loading, trusted Context, and business execution remain responsibilities of the Rails host application.
 
 ## Goal
 
-Demonstrate one complete path:
+Demonstrate one complete host-owned path:
 
 ```text
 MCP Client / AI Agent
+        ↓
+Authorization: Bearer <token>
         ↓ Streamable HTTP
+POST /mcp
+        ↓
+Rails authenticates token
+        ↓
+AgentCredential
+        ↓
+ActingFor::Agent
+        ↓
+Host resolves Principal
+        ↓
 purchase_product(product_id)
-        ↓
-Rails MCP adapter
-        ↓
-trusted Agent + Principal resolution
         ↓
 ShoppingAgentPurchase
         ↓
@@ -30,18 +38,30 @@ Rails executes or stops
 ActingFor::AuditEvent
 ```
 
-The integration proves that an MCP client can reach the same host authorization boundary already exercised by the browser demo.
+The important separation is:
+
+```text
+Bearer authentication
+  → Who is this Agent?
+
+ActingFor authorization
+  → May this Agent perform this Action on behalf of this Principal?
+```
 
 ## Responsibility boundary
 
-The MCP reference integration does **not** move MCP responsibilities into the `acting_for` gem.
+The integration does **not** move authentication or MCP responsibilities into the `acting_for` gem.
 
-- MCP handles the client/tool transport into the Rails host.
-- The Rails host establishes trusted Agent, Principal, Resource, and Context.
-- ActingFor decides whether the resolved Agent may perform the Action on behalf of the Principal.
-- The Rails host decides whether to execute the business operation based on the returned Decision.
+- The MCP client sends requests to the Rails host.
+- The Rails host authenticates the Bearer credential.
+- The Rails host maps the authenticated credential to `ActingFor::Agent`.
+- The Rails host resolves the Principal independently from tool arguments.
+- The Rails host loads the Product and establishes trusted Context.
+- ActingFor evaluates Delegation, constraints, expiry, and revocation.
+- ActingFor returns `allow`, `require_approval`, or `deny` and persists its AuditEvent.
+- The Rails host executes the business operation only for `allow`.
 
-ActingFor Core, database schema, and Public API remain unchanged by this integration.
+ActingFor Core, its database schema, and its Public API are unchanged by this Demo integration.
 
 ## Selected MCP implementation
 
@@ -51,56 +71,124 @@ The Demo uses the official MCP Ruby SDK:
 gem "mcp", "~> 1.6.1"
 ```
 
-`Gemfile.lock` resolves MCP Ruby SDK **1.6.1**.
+The reference path uses Streamable HTTP through `POST /mcp` and remains stateless.
 
-The reference path uses **Streamable HTTP through a Rails controller**. It is stateless and does not expose long-lived subscription listening.
+The official MCP HTTP client supports custom headers, so the verifier sends the Agent credential as:
 
-```text
-Official MCP HTTP Client
-      ↓
-POST /mcp
-      ↓
-McpController
-      ├─ establish trusted caller context
-      ├─ resolve ActingFor::Agent
-      ├─ resolve Principal
-      └─ create MCP::Server with request-specific server_context
-              ↓
-      PurchaseProductTool
-              ↓
-      ShoppingAgentPurchase
-              ↓
-          ActingFor
+```ruby
+transport = MCP::Client::HTTP.new(
+  url: endpoint,
+  headers: {
+    "Authorization" => "Bearer #{bearer_token}"
+  }
+)
 ```
 
-### Why this shape
+## Agent credential model
 
-- The official SDK supports MCP server/client functionality and Streamable HTTP.
-- Request-specific trusted identity state can be placed in `server_context`.
-- The transport stays replaceable; ActingFor Core only receives its normal domain inputs.
-- A stateless controller keeps the first reference integration small and makes the trust boundary easy to inspect.
+Agent authentication is implemented by the Demo host with `AgentCredential`.
 
-## Implemented files
+```text
+AgentCredential
+  agent_id
+  token_digest
+```
 
-The reference slice contains:
+The raw Bearer token is **not stored in the database**. The host stores only:
 
-- `POST /mcp` handled by `McpController`
-- `PurchaseProductTool` as the only MCP tool
-- `DemoMcpIdentityResolver` as an explicitly development-only host identity boundary
-- routing from the MCP tool to the existing `ShoppingAgentPurchase` service
-- `script/mcp_client_verify.rb`, a standalone official MCP HTTP client verifier
-- host integration tests for tool discovery, `allow`, `require_approval`, `deny`, and forged extra arguments
-- CI verification through a running Rails server over HTTP
+```text
+SHA-256(raw bearer token)
+```
+
+At request time:
+
+```text
+Authorization: Bearer <raw token>
+        ↓
+SHA-256
+        ↓
+AgentCredential.token_digest lookup
+        ↓
+ActingFor::Agent
+```
+
+This is a small reference implementation, not a new authentication protocol and not an ActingFor feature.
+
+Production systems should use high-entropy credentials, HTTPS, rotation/revocation policy, and an appropriate authentication provider. OAuth/OIDC or MCP Authorization can replace this Demo credential layer without changing `ActingFor.authorize`.
+
+## Demo credential
+
+Docker Compose exposes a development-only environment variable:
+
+```text
+DEMO_MCP_BEARER_TOKEN
+```
+
+For local reproducibility, the Demo default is:
+
+```text
+acting-for-demo-shopping-agent-token
+```
+
+This value is intentionally a public development credential and **must never be reused as a production secret**.
+
+A custom local value can be supplied before setup/start:
+
+```sh
+export DEMO_MCP_BEARER_TOKEN="replace-with-a-local-random-token"
+docker compose run --rm app bin/setup --skip-server
+docker compose up
+```
+
+The seed process stores only the digest of that value in `agent_credentials`.
+
+## MCP request authentication
+
+`McpController` authenticates the request before creating the MCP server/transport.
+
+```text
+POST /mcp
+  ↓
+DemoMcpIdentityResolver
+  ↓
+valid Bearer token?
+  ├─ no  → HTTP 401 + WWW-Authenticate: Bearer
+  └─ yes → request-specific server_context
+```
+
+The `server_context` contains trusted host objects:
+
+```ruby
+{
+  agent: authenticated_agent,
+  principal: host_resolved_principal
+}
+```
+
+Authentication failure is not converted into an ActingFor `deny`. It is an HTTP authentication failure and never reaches delegated authorization.
+
+## Agent vs Principal resolution
+
+The Bearer token identifies the Agent. It does not allow the caller to choose a Principal.
+
+For this deliberately small shopping Demo:
+
+- Bearer token → `ActingFor::Agent`
+- Host Demo configuration → `Demo User`
+
+The Principal is therefore still host-resolved. The tool request cannot send `principal_id` to switch principals.
+
+A real multi-user host would replace the Demo Principal lookup with its own trusted account/session/resource/authorization context.
 
 ## MCP tool
 
-The reference integration intentionally exposes exactly one tool:
+The reference integration exposes exactly one tool:
 
 ```text
 purchase_product(product_id)
 ```
 
-The Agent supplies only the product identifier:
+The Agent supplies only:
 
 ```json
 {
@@ -108,7 +196,7 @@ The Agent supplies only the product identifier:
 }
 ```
 
-These values are not accepted as tool-controlled authorization inputs:
+The following are not accepted as caller-controlled authorization inputs:
 
 - `amount`
 - `price`
@@ -117,11 +205,11 @@ These values are not accepted as tool-controlled authorization inputs:
 - `decision`
 - `reason_code`
 
-The Rails host establishes them from trusted state.
+This prevents the caller from overriding authenticated identity or trusted business data.
 
 ## Existing host boundary
 
-Both the browser path and the MCP path reuse:
+Both browser and MCP paths reuse:
 
 ```ruby
 ShoppingAgentPurchase.call(
@@ -142,34 +230,10 @@ That service:
 ```text
 Browser Controller ───────┐
                           │
-MCP Tool Adapter ─────────┼──> ShoppingAgentPurchase
+Authenticated MCP Tool ───┼──> ShoppingAgentPurchase
                           │          ↓
 Future API Adapter ───────┘      ActingFor
 ```
-
-This keeps delegated authorization independent of the transport used to reach Rails.
-
-## Identity and Principal resolution
-
-MCP transport identity and ActingFor Agent identity are separate concepts.
-
-```text
-Authenticated / trusted MCP caller context
-        ↓
-Host identity mapping
-        ↓
-ActingFor::Agent
-        ↓
-Host Principal resolution
-        ↓
-ShoppingAgentPurchase
-```
-
-The tool arguments themselves do not choose the Agent or Principal.
-
-For this local reference Demo, `DemoMcpIdentityResolver` maps to the pre-provisioned `shopping-agent` and `Demo User`. This resolver is **development-only** and must not be presented as Agent authentication.
-
-A production host can replace this resolver with OAuth/OIDC, API credentials, MCP authorization context, or another authenticated identity source without changing ActingFor or `ShoppingAgentPurchase`.
 
 ## Trusted Context boundary
 
@@ -203,7 +267,7 @@ Agent sends product_id + amount
 | `require_approval` | No Purchase | `executed: false` |
 | `deny` | No Purchase | `executed: false` |
 
-Representative response:
+Representative authorized response:
 
 ```json
 {
@@ -214,122 +278,116 @@ Representative response:
 }
 ```
 
-A denied authorization is a normal authorization result, not an MCP transport failure. Authentication failure, identity-resolution failure, invalid input, and unexpected host/system failure remain errors instead of being converted into `deny`.
+Authentication and authorization remain distinct:
+
+```text
+Missing / invalid Bearer token
+  → HTTP 401
+
+Authenticated Agent with no matching Delegation
+  → ActingFor deny / no_matching_delegation
+```
+
+This distinction is important because a valid Agent identity does not imply delegated authority.
 
 ## Security requirements
 
 The implementation preserves these boundaries:
 
-1. **Agent and Principal are host-resolved.** Tool arguments cannot choose them.
-2. **Price is host-resolved.** The Agent cannot choose the authorization amount.
-3. **MCP access is not delegated authorization.** Reaching the tool does not imply permission to purchase.
-4. **`require_approval != allow`.** No Purchase is created.
-5. **Decision is not reusable authority.** Authorization occurs close to the protected operation.
-6. **Audit failure stops execution.** An authorization system failure is not converted to success.
-7. **No `ActingFor::Internal::*` dependency.** The Demo uses only the public API.
-8. **ActingFor Core remains MCP-independent.**
+1. **Bearer credentials authenticate Agents; they do not authorize purchases.**
+2. **Raw tokens are not persisted.** Only a SHA-256 digest is stored.
+3. **Agent is host-resolved from the credential.** Tool arguments cannot choose it.
+4. **Principal is host-resolved.** Tool arguments cannot choose it.
+5. **Price is host-resolved.** The Agent cannot choose the authorization amount.
+6. **`require_approval != allow`.** No Purchase is created.
+7. **Decision is not reusable authority.** Authorization occurs close to the operation.
+8. **Audit failure stops execution.** Authorization system failure is not converted to success.
+9. **No `ActingFor::Internal::*` dependency.** The Demo uses only ActingFor public APIs.
+10. **ActingFor Core remains authentication- and MCP-independent.**
+
+Bearer tokens must be transported over HTTPS in production. Plain HTTP is used here only for the local loopback Docker Demo.
 
 ## Error boundary
 
 ```text
-Unknown / unauthenticated caller
-        → host authentication / resolution error
+Missing / malformed / invalid Bearer token
+        → HTTP 401 before MCP execution
+
+Valid token for an Agent without matching Delegation
+        → ActingFor deny
 
 Unknown product_id
         → host input/resource error
 
-ActingFor returns deny
-        → normal authorization result
-
 ActingFor returns require_approval
-        → normal authorization result
+        → normal authorization result, no Purchase
 
 Audit persistence / database failure
         → system error, no Purchase
 ```
 
-## Automated host integration coverage
+## Automated coverage
 
 The Demo test suite covers:
 
-- MCP `tools/list` exposes only `purchase_product`
+- missing Bearer token → `401 Unauthorized`
+- invalid Bearer token → `401 Unauthorized`
+- authenticated `tools/list` exposes only `purchase_product`
 - ¥800 → `allow`, Purchase created, AuditEvent recorded
 - ¥2,000 → `require_approval`, no Purchase, AuditEvent recorded
 - ¥5,000 → `deny`, no Purchase, AuditEvent recorded
+- a valid credential for a different Agent resolves that Agent and receives `deny` when it has no Delegation
 - forged `amount`, `agent_id`, and `principal_id` are rejected as extra tool arguments
-- the existing browser integration continues to pass
+- the existing browser integration continues to run independently
 
-The Demo does not duplicate ActingFor Core matching tests.
+The Demo also includes model coverage proving that `AgentCredential.issue!` stores a digest rather than the raw token.
 
 ## Official MCP client verification
 
-The reference path was verified through a running Rails server using the official `MCP::Client::HTTP`, not only through Rails IntegrationTest.
+`script/mcp_client_verify.rb` uses the official `MCP::Client::HTTP` transport and sends the Bearer header on every request.
 
-Verification environment:
-
-- ActingFor: **0.1.1**
-- MCP Ruby SDK: **1.6.1**
-- HTTP client dependency: **Faraday 2.14.4**
-- GitHub Actions run: **36706086236**
-
-The standalone verifier performs an MCP lifecycle connection, lists tools, and calls `purchase_product` for all three seeded products.
-
-Observed results:
+CI verifies:
 
 ```text
-MCP product=1: allow / delegation_allowed / executed=true
-MCP product=2: require_approval / delegation_requires_approval / executed=false
-MCP product=3: deny / no_matching_delegation / executed=false
-External MCP client verification: PASS
+official MCP HTTP client
+  ↓ Bearer authentication
+Rails MCP endpoint
+  ↓ Agent resolution
+purchase_product
+  ↓
+ShoppingAgentPurchase
+  ↓
+ActingFor
 ```
 
-The same CI run also completed the normal Demo suite and HTTP smoke verification:
+The verifier calls all three seeded products and expects:
 
 ```text
-23 runs
-152 assertions
-0 failures
-0 errors
-0 skips
-Smoke HTTP: PASS
+¥800   → allow / delegation_allowed / executed=true
+¥2,000 → require_approval / delegation_requires_approval / executed=false
+¥5,000 → deny / no_matching_delegation / executed=false
 ```
 
-This closes the first reference integration verification goal: a protocol-level MCP HTTP client can invoke the Rails tool endpoint and reach ActingFor-backed delegated authorization end-to-end.
+The earlier pre-auth MCP reference verification remains historical evidence. The Bearer-authenticated path is the current Demo design.
 
 ## Non-goals
 
-This reference integration intentionally does not provide:
+This integration intentionally does not provide:
 
-- MCP implementation inside the `acting_for` gem
-- a new ActingFor Public API
-- OAuth / OIDC server functionality
-- a production Agent authentication standard
-- a general Agent provisioning system
+- authentication inside the `acting_for` gem
+- OAuth/OIDC server functionality
+- MCP Authorization server implementation
+- a new Agent identity standard
+- a general Agent provisioning/admin system
+- token refresh protocol
 - approval workflow or Approval UI
-- cumulative / aggregate delegation budgets
+- cumulative/aggregate delegation budgets
 - multiple MCP tools
 
 ## Core-change gate
 
-Before changing the `acting_for` gem for future MCP work, ask:
+Before changing the `acting_for` gem for future Agent integration work, ask:
 
-> Can this requirement be implemented correctly in the Rails host adapter while keeping the current ActingFor Public API and Security Contract?
+> Can this requirement be implemented correctly in the Rails host while keeping the current ActingFor Public API and Security Contract?
 
-For this first MCP reference integration, the answer was **yes**. No ActingFor Core, schema, or Public API change was required.
-
-If future integration work reveals a genuinely missing abstraction, record it separately as a Core design issue rather than coupling MCP protocol objects to ActingFor.
-
-## Completion status
-
-The first MCP reference integration is **complete for its defined scope**:
-
-- official MCP Ruby SDK selected and locked
-- `purchase_product(product_id)` exposed through Streamable HTTP
-- existing `ShoppingAgentPurchase` reused
-- trusted Agent, Principal, and amount boundaries preserved
-- all three ActingFor decisions verified
-- only `allow` executes a Purchase
-- authorization attempts remain audited
-- official MCP HTTP client end-to-end verification passed
-- existing Demo tests and HTTP smoke verification passed
-- ActingFor Core remains unchanged
+Bearer Agent authentication can be implemented entirely in the host. Therefore this change does not require an ActingFor Core change.
