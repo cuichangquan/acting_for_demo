@@ -174,7 +174,7 @@ class McpPurchaseProductTest < ActionDispatch::IntegrationTest
 
     post "/mcp",
       params: JSON.generate(request_payload),
-      headers:
+      headers: headers
 
     return if response.body.blank?
 
