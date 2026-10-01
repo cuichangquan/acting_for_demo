@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "acting-for-demo": {
+      "type": "http",
+      "url": "${ACTING_FOR_DEMO_MCP_URL:-http://127.0.0.1:3000/mcp}",
+      "headers": {
+        "Authorization": "Bearer ${ACTING_FOR_DEMO_TOKEN}"
+      }
+    }
+  }
+}

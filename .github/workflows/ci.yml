@@ -18,6 +18,23 @@ jobs:
       - name: Checkout Demo
         uses: actions/checkout@v6
 
+      - name: Validate AI Agent setup files
+        run: |
+          set -euo pipefail
+          bash -n bin/setup_codex
+          bash -n bin/setup_claude
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          config = json.loads(Path('.mcp.json').read_text())
+          server = config['mcpServers']['acting-for-demo']
+          assert server['type'] == 'http'
+          assert '127.0.0.1:3000/mcp' in server['url']
+          assert '${ACTING_FOR_DEMO_TOKEN}' in server['headers']['Authorization']
+          print('AI Agent setup files: PASS')
+          PY
+
       - name: Build Demo
         run: docker compose build
 

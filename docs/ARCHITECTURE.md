@@ -3,7 +3,7 @@
 ## Runtime containers
 
 ```text
-Mac Host (Docker + Git + optional Codex CLI)
+Mac Host (Docker + Git + optional Codex CLI / Claude Code)
        ↓ Docker Compose
 app: Ruby 3.4.10 / Rails 8.0.5.1 / Bundler / demo source
        ↓ PGHOST=db
@@ -14,7 +14,7 @@ postgres_data named volume
 
 The source tree is bind-mounted for development. Installed gems remain in the image, PostgreSQL data remains in `postgres_data`, and Rails temporary/log data uses named volumes. The host's Ruby and PostgreSQL installations are not used.
 
-Codex CLI, when used for the hands-on Agent flow, runs on the Mac host. It connects to the Rails container through the published loopback MCP endpoint at `http://127.0.0.1:3000/mcp`.
+Codex CLI or Claude Code, when used for the hands-on Agent flow, runs on the Mac host. Either client connects to the Rails container through the published loopback MCP endpoint at `http://127.0.0.1:3000/mcp`.
 
 ## Human and authenticated Agent paths
 
@@ -23,7 +23,7 @@ Human path                       Authenticated Agent path
 
 Human                            User natural language
   ↓                                ↓
-Host Authorization              Codex CLI / MCP Client
+Host Authorization              Codex CLI / Claude Code / MCP Client
   ↓                                ↓ Bearer token
 HumanPurchase                   Rails Host Application
   ↓ Product.find                  ↓ AgentCredential digest lookup
@@ -88,7 +88,7 @@ name
 price
 ```
 
-Its purpose is discovery. A real Agent such as Codex can find the actual `product_id` before calling the purchase tool instead of guessing IDs.
+Its purpose is discovery. A real Agent such as Codex CLI or Claude Code can find the actual `product_id` before calling the purchase tool instead of guessing IDs.
 
 `list_products` does not:
 
@@ -146,7 +146,7 @@ deny              → stop
 | Component | Responsibility |
 | --- | --- |
 | Human / Principal | Delegates authority |
-| Codex CLI / MCP Client | Interprets user intent, discovers products, selects and calls tools |
+| Codex CLI / Claude Code / MCP Client | Interprets user intent, discovers products, selects and calls tools |
 | MCP server | Exposes controlled host capabilities |
 | `AgentCredential` | Host-owned Bearer credential → Agent mapping |
 | `DemoMcpIdentityResolver` | Authenticates Agent and resolves trusted Demo Principal |
@@ -177,9 +177,11 @@ The default allow Delegation matches amounts up to ¥1,000. The default approval
 
 Human Approval is not implemented in this Demo. `require_approval` is a stop result, not permission to execute.
 
-## Codex CLI boundary
+## AI Agent client boundary
 
-Codex is an MCP client, not part of ActingFor Core.
+Codex CLI and Claude Code are MCP clients, not parts of ActingFor Core. Replacing one MCP client with another does not change the Rails/ActingFor boundary.
+
+### Codex CLI
 
 The repository's `AGENTS.md` tells Codex only how to preserve the Demo shopping security boundary:
 
@@ -193,7 +195,15 @@ stop on require_approval
 
 `bin/setup_codex` registers the local MCP URL using Codex's Bearer-token environment-variable support. It does not store the Bearer token value in the repository or overwrite an existing same-name MCP configuration.
 
-Replacing Codex with another MCP client does not change the Rails/ActingFor boundary.
+### Claude Code
+
+The repository's `CLAUDE.md` carries the same shopping boundary for Claude Code. Project-scoped MCP configuration is checked in as `.mcp.json` and uses environment-variable expansion for the Bearer header:
+
+```text
+Authorization: Bearer ${ACTING_FOR_DEMO_TOKEN}
+```
+
+`bin/setup_claude` validates the local Claude CLI/project configuration and checks the Demo MCP endpoint. It does not write to Claude user configuration or store the Bearer token value. On first use, Claude Code may require interactive workspace trust/project-MCP approval.
 
 ## Replaceable authentication layer
 
