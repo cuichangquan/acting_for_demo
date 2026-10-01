@@ -6,8 +6,8 @@ class McpController < ActionController::API
       name: "acting_for_demo",
       title: "ActingFor Shopping Demo",
       version: "1.0.0",
-      instructions: "Use purchase_product to request a delegated purchase through the Rails host.",
-      tools: [PurchaseProductTool],
+      instructions: "Use list_products before purchase_product. Never guess product_id; delegated purchases must go through purchase_product and the Rails host authorization boundary.",
+      tools: [ListProductsTool, PurchaseProductTool],
       server_context: DemoMcpIdentityResolver.resolve!(authorization_header: request.authorization)
     )
 
