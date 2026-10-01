@@ -8,7 +8,7 @@ class McpController < ActionController::API
       version: "1.0.0",
       instructions: "Use purchase_product to request a delegated purchase through the Rails host.",
       tools: [PurchaseProductTool],
-      server_context: DemoMcpIdentityResolver.resolve!
+      server_context: DemoMcpIdentityResolver.resolve!(authorization_header: request.authorization)
     )
 
     options = {
@@ -24,5 +24,8 @@ class McpController < ActionController::API
     response_headers.each { |key, value| response.set_header(key, value) }
     self.status = status
     self.response_body = body
+  rescue DemoMcpIdentityResolver::Unauthorized
+    response.set_header("WWW-Authenticate", 'Bearer realm="acting_for_demo_mcp"')
+    head :unauthorized
   end
 end
