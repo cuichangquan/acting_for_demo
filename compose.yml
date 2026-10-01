@@ -21,6 +21,7 @@ services:
       PGHOST: db
       PGUSER: postgres
       PGPASSWORD: demo_password_not_for_production
+      DEMO_MCP_BEARER_TOKEN: ${DEMO_MCP_BEARER_TOKEN:-acting-for-demo-shopping-agent-token}
     ports:
       - "3000:3000"
     depends_on:
