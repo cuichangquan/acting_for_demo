@@ -21,9 +21,6 @@ class ListProductsTool < MCP::Tool
 
   class << self
     def call(server_context:)
-      server_context.fetch(:agent)
-      server_context.fetch(:principal)
-
       products = Product.order(:id).map do |product|
         {
           id: product.id,
