@@ -4,14 +4,17 @@
 require "mcp"
 require "mcp/client/http"
 
-endpoint, allow_id, approval_id, deny_id = ARGV
+endpoint, bearer_token, allow_id, approval_id, deny_id = ARGV
 
-unless [endpoint, allow_id, approval_id, deny_id].all?
-  warn "Usage: ruby script/mcp_client_verify.rb MCP_URL ALLOW_PRODUCT_ID APPROVAL_PRODUCT_ID DENY_PRODUCT_ID"
+unless [endpoint, bearer_token, allow_id, approval_id, deny_id].all?
+  warn "Usage: ruby script/mcp_client_verify.rb MCP_URL BEARER_TOKEN ALLOW_PRODUCT_ID APPROVAL_PRODUCT_ID DENY_PRODUCT_ID"
   exit 2
 end
 
-transport = MCP::Client::HTTP.new(url: endpoint)
+transport = MCP::Client::HTTP.new(
+  url: endpoint,
+  headers: { "Authorization" => "Bearer #{bearer_token}" }
+)
 client = MCP::Client.new(transport: transport)
 
 begin
@@ -55,7 +58,7 @@ begin
     puts "MCP product=#{product_id}: #{expected_status} / #{expected_reason} / executed=#{expected_executed}"
   end
 
-  puts "External MCP client verification: PASS"
+  puts "External MCP client verification with Bearer auth: PASS"
 ensure
   transport.close if transport.respond_to?(:close)
 end
