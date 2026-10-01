@@ -2,12 +2,12 @@
 
 This is the official hands-on reference application for [ActingFor](https://github.com/cuichangquan/acting_for). It shows how ActingFor's public API fits into a real Rails host application and provides automated integration verification plus an environment for human manual verification.
 
-> **Verification note:** ActingFor 0.1.1 is published on RubyGems. The demo verifies the released `Decision#reason_code` Public API and includes a minimal MCP Streamable HTTP reference path with host-owned Bearer Agent authentication.
+> **Verification note:** ActingFor 0.1.1 is published on RubyGems. The demo verifies the released `Decision#reason_code` Public API and includes an authenticated MCP Streamable HTTP path that can be used directly from Codex CLI.
 
 ## Repository responsibilities
 
 - **ActingFor:** authorization library and source of truth for gem behavior, its Public API, and its Security Contract.
-- **ActingFor Demo:** host-application example and integration-verification environment. It is the source of truth for demo usage, host integration, Agent authentication reference code, and the manual-verification workflow.
+- **ActingFor Demo:** host-application example and integration-verification environment. It is the source of truth for demo usage, host integration, Agent authentication reference code, MCP tools, Codex CLI hands-on usage, and the manual-verification workflow.
 
 The demo does not duplicate the gem specification or replace ActingFor's core CI. `acting_for/test` formally tests gem internals, the Public API, and the Security Contract. `acting_for_demo/test` uses only the public API from a real host application and must not depend on `ActingFor::Internal::*`.
 
@@ -35,7 +35,9 @@ Problems found through demo integration are reported back to ActingFor as issues
 - Automatic ActingFor authorization audit
 - Direct human purchases compared with delegated-agent purchases
 - A host-built Delegation Settings screen using ActingFor's public API
-- A minimal MCP `purchase_product(product_id)` tool routed through the same `ShoppingAgentPurchase` host service
+- An authenticated MCP `list_products()` tool for trusted product discovery
+- An authenticated MCP `purchase_product(product_id)` tool routed through the same `ShoppingAgentPurchase` host service
+- Codex CLI acting as the real local AI Agent through MCP; no browser AI Chat UI is required
 
 ## Delegated purchase flow
 
@@ -142,10 +144,10 @@ The browser-accessible Delegation Settings screen changes the two demo limits an
 
 ## MCP + Bearer Agent authentication reference path
 
-The demo includes one deliberately small authenticated MCP path:
+The authenticated MCP path is deliberately small:
 
 ```text
-MCP Client / AI Agent
+Codex CLI / MCP Client
    ↓ Authorization: Bearer <token>
 POST /mcp
    ↓
@@ -155,18 +157,26 @@ AgentCredential
    ↓
 ActingFor::Agent
    ↓
-PurchaseProductTool
+list_products()
+   ↓ trusted Product data from Rails DB
+Codex selects returned product_id
+   ↓
+purchase_product(product_id)
    ↓
 ShoppingAgentPurchase
-   ↓
+   ↓ Product.find + Product#price
 ActingFor.authorize(...)
+   ↓
+ALLOW / REQUIRE_APPROVAL / DENY
 ```
 
 The Bearer token authenticates the Agent; it does **not** authorize a purchase. ActingFor still evaluates whether that authenticated Agent has a matching Delegation for the host-resolved Principal.
 
 The raw Bearer token is not stored in the database. `AgentCredential` stores a SHA-256 digest and maps it to the local `ActingFor::Agent`.
 
-The tool accepts only `product_id`. Rails resolves the Agent from the credential, resolves the Demo Principal on the host, and reloads `Product#price` from PostgreSQL. The MCP caller cannot supply the authorization amount, Agent ID, or Principal ID.
+`list_products` takes no authorization inputs and returns current Demo product `id`, `name`, and `price` from PostgreSQL. `purchase_product` accepts only `product_id`. Rails resolves the Agent from the credential, resolves the Demo Principal on the host, reloads the Product, and uses `Product#price` as trusted authorization Context.
+
+The MCP caller cannot supply the authorization amount, Agent ID, Principal ID, Decision, or reason code.
 
 The full design and security boundary are documented in [MCP + Bearer Agent Authentication reference integration](docs/AGENT_INTEGRATION.md).
 
@@ -174,6 +184,7 @@ The full design and security boundary are documented in [MCP + Bearer Agent Auth
 
 - Docker Desktop or Docker Engine with Docker Compose
 - Git
+- Codex CLI only for the optional Codex hands-on flow
 
 Ruby, Rails, Bundler gems, and PostgreSQL run inside Docker. They are not required on the Mac host. The images use Ruby 3.4.10, Rails 8.0.5.1, and PostgreSQL 16.
 
@@ -216,10 +227,101 @@ docker compose run --rm app bin/reset_demo
 
 Stop containers without deleting database data using `docker compose down`. To completely reset Docker-managed database and runtime volumes, use `docker compose down -v`; **`-v` permanently deletes the demo database volume**. Then repeat setup. `bin/reset_demo` also drops and recreates only the non-production demo databases.
 
+## Hands-on with Codex CLI
+
+Codex CLI can connect directly to the Demo's Streamable HTTP MCP endpoint. OpenAI's current Codex CLI supports `codex mcp add <name> --url <url>` and `--bearer-token-env-var <ENV_VAR>` for HTTP Bearer authentication.
+
+Start the Demo first using the Quick Start above. Then, in the repository directory:
+
+```sh
+export ACTING_FOR_DEMO_TOKEN="acting-for-demo-shopping-agent-token"
+bin/setup_codex
+```
+
+`bin/setup_codex`:
+
+- adds `acting-for-demo` only when that MCP name is not already configured
+- never removes or overwrites an existing MCP entry
+- stores only the **environment-variable name** in Codex configuration, not the Bearer token value
+- verifies that the local MCP endpoint exposes `list_products` and `purchase_product`
+
+The helper changes Codex's normal user MCP configuration only when the entry is absent. If an entry with the same name already exists, it prints that configuration and leaves it unchanged.
+
+You can also configure Codex manually:
+
+```sh
+export ACTING_FOR_DEMO_TOKEN="acting-for-demo-shopping-agent-token"
+
+codex mcp add acting-for-demo \
+  --url http://127.0.0.1:3000/mcp \
+  --bearer-token-env-var ACTING_FOR_DEMO_TOKEN
+
+codex mcp get acting-for-demo
+codex mcp list
+```
+
+The token environment variable must be present in the shell that starts Codex. The repository includes a small `AGENTS.md` so Codex uses the MCP security boundary for Demo shopping requests without turning those instructions into a general development workflow.
+
+Now start Codex from this repository:
+
+```sh
+codex
+```
+
+Try:
+
+```text
+800円の商品を買って
+```
+
+Expected Agent path:
+
+```text
+Codex
+  ↓ list_products()
+Everyday Item / ¥800 / returned product_id
+  ↓ purchase_product(product_id)
+Bearer Agent Authentication
+  ↓
+ActingFor.authorize
+  ↓
+ALLOW / delegation_allowed
+  ↓
+Purchase created
+```
+
+The three default outcomes are:
+
+```text
+800円
+  → ALLOW / delegation_allowed / executed=true
+
+2000円
+  → REQUIRE_APPROVAL / delegation_requires_approval / executed=false
+  → Human Approval is not implemented yet
+
+5000円
+  → DENY / no_matching_delegation / executed=false
+```
+
+CI verifies the same `list_products → purchase_product` MCP path with the official MCP Ruby HTTP client. The natural-language Codex interaction itself is a local manual verification step because Codex CLI runs on the user's machine.
+
+The Demo message is:
+
+```text
+MCP gives the AI Agent capabilities.
+Authentication establishes who the Agent is.
+ActingFor controls what that Agent may do on behalf of the Principal.
+Rails executes the business action only after authorization.
+```
+
+OpenAI's current Codex MCP quickstart: <https://developers.openai.com/learn/docs-mcp>
+
 ## Security notes
 
 - Agent-supplied `amount` is not trusted or used for authorization.
 - Rails loads `Product` by `product_id` and supplies `product.price` as trusted Context.
+- `list_products` exposes current Demo product data read from the Rails database; it does not make an authorization Decision or create a Purchase.
 - The Demo host authenticates MCP Agents with a Bearer token and maps its digest to `ActingFor::Agent`.
 - A valid Bearer credential identifies the Agent; it does not grant ActingFor authority by itself.
 - Missing or invalid MCP Bearer credentials return HTTP `401` before delegated authorization.
