@@ -2,12 +2,12 @@
 
 This is the official hands-on reference application for [ActingFor](https://github.com/cuichangquan/acting_for). It shows how ActingFor's public API fits into a real Rails host application and provides automated integration verification plus an environment for human manual verification.
 
-> **Verification note:** ActingFor 0.1.1 is published on RubyGems. The demo verifies the released `Decision#reason_code` Public API and includes an authenticated MCP Streamable HTTP path that can be used directly from Codex CLI.
+> **Verification note:** ActingFor 0.1.1 is published on RubyGems. The demo verifies the released `Decision#reason_code` Public API and includes an authenticated MCP Streamable HTTP path that can be used directly from Codex CLI or Claude Code.
 
 ## Repository responsibilities
 
 - **ActingFor:** authorization library and source of truth for gem behavior, its Public API, and its Security Contract.
-- **ActingFor Demo:** host-application example and integration-verification environment. It is the source of truth for demo usage, host integration, Agent authentication reference code, MCP tools, Codex CLI hands-on usage, and the manual-verification workflow.
+- **ActingFor Demo:** host-application example and integration-verification environment. It is the source of truth for demo usage, host integration, Agent authentication reference code, MCP tools, AI coding-agent hands-on usage, and the manual-verification workflow.
 
 The demo does not duplicate the gem specification or replace ActingFor's core CI. `acting_for/test` formally tests gem internals, the Public API, and the Security Contract. `acting_for_demo/test` uses only the public API from a real host application and must not depend on `ActingFor::Internal::*`.
 
@@ -37,7 +37,7 @@ Problems found through demo integration are reported back to ActingFor as issues
 - A host-built Delegation Settings screen using ActingFor's public API
 - An authenticated MCP `list_products()` tool for trusted product discovery
 - An authenticated MCP `purchase_product(product_id)` tool routed through the same `ShoppingAgentPurchase` host service
-- Codex CLI acting as the real local AI Agent through MCP; no browser AI Chat UI is required
+- Codex CLI or Claude Code acting as the real local AI Agent through MCP; no browser AI Chat UI is required
 
 ## Delegated purchase flow
 
@@ -147,7 +147,7 @@ The browser-accessible Delegation Settings screen changes the two demo limits an
 The authenticated MCP path is deliberately small:
 
 ```text
-Codex CLI / MCP Client
+Codex CLI / Claude Code / MCP Client
    ↓ Authorization: Bearer <token>
 POST /mcp
    ↓
@@ -159,7 +159,7 @@ ActingFor::Agent
    ↓
 list_products()
    ↓ trusted Product data from Rails DB
-Codex selects returned product_id
+Agent selects returned product_id
    ↓
 purchase_product(product_id)
    ↓
@@ -184,7 +184,7 @@ The full design and security boundary are documented in [MCP + Bearer Agent Auth
 
 - Docker Desktop or Docker Engine with Docker Compose
 - Git
-- Codex CLI only for the optional Codex hands-on flow
+- Codex CLI or Claude Code only for the optional real-Agent hands-on flows
 
 Ruby, Rails, Bundler gems, and PostgreSQL run inside Docker. They are not required on the Mac host. The images use Ruby 3.4.10, Rails 8.0.5.1, and PostgreSQL 16.
 
@@ -227,9 +227,13 @@ docker compose run --rm app bin/reset_demo
 
 Stop containers without deleting database data using `docker compose down`. To completely reset Docker-managed database and runtime volumes, use `docker compose down -v`; **`-v` permanently deletes the demo database volume**. Then repeat setup. `bin/reset_demo` also drops and recreates only the non-production demo databases.
 
-## Hands-on with Codex CLI
+## Hands-on with AI coding agents
 
-Codex CLI can connect directly to the Demo's Streamable HTTP MCP endpoint. OpenAI's current Codex CLI supports `codex mcp add <name> --url <url>` and `--bearer-token-env-var <ENV_VAR>` for HTTP Bearer authentication.
+Both Codex CLI and Claude Code can connect to the same Streamable HTTP MCP endpoint. They are replaceable MCP clients; the Rails authentication, ActingFor authorization, trusted Context, and business-execution boundaries remain identical.
+
+### Codex CLI
+
+OpenAI's current Codex CLI supports `codex mcp add <name> --url <url>` and `--bearer-token-env-var <ENV_VAR>` for HTTP Bearer authentication.
 
 Start the Demo first using the Quick Start above. Then, in the repository directory:
 
@@ -262,13 +266,43 @@ codex mcp list
 
 The token environment variable must be present in the shell that starts Codex. The repository includes a small `AGENTS.md` so Codex uses the MCP security boundary for Demo shopping requests without turning those instructions into a general development workflow.
 
-Now start Codex from this repository:
+Start Codex from this repository:
 
 ```sh
 codex
 ```
 
-Try:
+OpenAI's current Codex MCP quickstart: <https://developers.openai.com/learn/docs-mcp>
+
+### Claude Code
+
+Claude Code supports project-scoped HTTP MCP configuration in `.mcp.json`, including environment-variable expansion in HTTP headers. This repository includes `.mcp.json` with `acting-for-demo` preconfigured and the Bearer token referenced as `${ACTING_FOR_DEMO_TOKEN}`; the token value is not committed.
+
+Start the Demo first, then in another terminal:
+
+```sh
+export ACTING_FOR_DEMO_TOKEN="acting-for-demo-shopping-agent-token"
+bin/setup_claude
+claude
+```
+
+`bin/setup_claude`:
+
+- checks that Claude Code CLI is available
+- validates the repository's project MCP configuration
+- never writes to Claude Code user configuration
+- never stores the Bearer token value
+- verifies `list_products` and `purchase_product` when the token is available
+
+On first use, Claude Code may ask you to trust the workspace and approve the project MCP server. Review and approve it interactively. Inside Claude Code, `/mcp` shows the server status. The repository's `CLAUDE.md` gives Claude Code the same Demo-shopping security boundary used for Codex.
+
+Detailed Claude Code instructions: [Claude Code hands-on Agent](docs/CLAUDE_CODE.md).
+
+Official Claude Code MCP reference: <https://code.claude.com/docs/en/mcp>
+
+### Try the Demo
+
+With either Agent, try:
 
 ```text
 800円の商品を買って
@@ -277,7 +311,7 @@ Try:
 Expected Agent path:
 
 ```text
-Codex
+AI Agent
   ↓ list_products()
 Everyday Item / ¥800 / returned product_id
   ↓ purchase_product(product_id)
@@ -304,7 +338,7 @@ The three default outcomes are:
   → DENY / no_matching_delegation / executed=false
 ```
 
-CI verifies the same `list_products → purchase_product` MCP path with the official MCP Ruby HTTP client. The natural-language Codex interaction itself is a local manual verification step because Codex CLI runs on the user's machine.
+CI verifies the same `list_products → purchase_product` MCP path with the official MCP Ruby HTTP client. Natural-language Codex CLI and Claude Code interactions themselves are local manual verification steps because those Agent CLIs run on the user's machine.
 
 The Demo message is:
 
@@ -314,8 +348,6 @@ Authentication establishes who the Agent is.
 ActingFor controls what that Agent may do on behalf of the Principal.
 Rails executes the business action only after authorization.
 ```
-
-OpenAI's current Codex MCP quickstart: <https://developers.openai.com/learn/docs-mcp>
 
 ## Security notes
 
@@ -350,6 +382,7 @@ gem "acting_for", "~> 0.1.1"
 - [Compatibility](docs/COMPATIBILITY.md)
 - [Manual verification checklist](docs/MANUAL_VERIFICATION.md)
 - [MCP + Bearer Agent Authentication reference integration](docs/AGENT_INTEGRATION.md)
+- [Claude Code hands-on Agent](docs/CLAUDE_CODE.md)
 
 ## Tests
 
