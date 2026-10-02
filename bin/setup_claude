@@ -1,0 +1,77 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+SERVER_NAME="acting-for-demo"
+SERVER_URL="${ACTING_FOR_DEMO_MCP_URL:-http://127.0.0.1:3000/mcp}"
+TOKEN_ENV_VAR="ACTING_FOR_DEMO_TOKEN"
+PROJECT_CONFIG="$ROOT_DIR/.mcp.json"
+
+if ! command -v claude >/dev/null 2>&1; then
+  echo "Claude Code CLI was not found in PATH." >&2
+  echo "Install or update Claude Code using the current Anthropic instructions, then rerun this script." >&2
+  exit 1
+fi
+
+if [[ ! -f "$PROJECT_CONFIG" ]]; then
+  echo "Expected Claude Code project MCP configuration was not found: $PROJECT_CONFIG" >&2
+  exit 1
+fi
+
+if ! grep -q '"acting-for-demo"' "$PROJECT_CONFIG" || \
+   ! grep -q 'ACTING_FOR_DEMO_TOKEN' "$PROJECT_CONFIG"; then
+  echo "The project MCP configuration does not contain the expected ActingFor Demo entry." >&2
+  exit 1
+fi
+
+echo "Claude Code project MCP configuration: $PROJECT_CONFIG"
+echo "MCP server: $SERVER_NAME"
+echo "URL: $SERVER_URL"
+echo "No Claude user configuration was changed."
+
+if [[ -n "${ACTING_FOR_DEMO_TOKEN:-}" ]] && command -v curl >/dev/null 2>&1; then
+  echo
+  echo "Checking the local MCP endpoint..."
+  if RESPONSE=$(curl --fail --silent --show-error \
+    -X POST "$SERVER_URL" \
+    -H "Authorization: Bearer $ACTING_FOR_DEMO_TOKEN" \
+    -H "Content-Type: application/json" \
+    -H "Accept: application/json" \
+    -H "MCP-Protocol-Version: 2025-11-25" \
+    --data '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'); then
+    if [[ "$RESPONSE" == *'"list_products"'* && "$RESPONSE" == *'"purchase_product"'* ]]; then
+      echo "MCP connection check: PASS (list_products, purchase_product)"
+    else
+      echo "MCP endpoint responded, but the expected tools were not found." >&2
+      echo "$RESPONSE" >&2
+      exit 1
+    fi
+  else
+    echo "MCP connection check failed." >&2
+    echo "Confirm that 'docker compose up' is running and that $TOKEN_ENV_VAR matches the Demo Bearer token." >&2
+    exit 1
+  fi
+elif [[ -z "${ACTING_FOR_DEMO_TOKEN:-}" ]]; then
+  echo
+  echo "ACTING_FOR_DEMO_TOKEN is not set; skipped the authenticated MCP endpoint check."
+else
+  echo "curl was not found; skipped the MCP endpoint check."
+fi
+
+echo
+echo "Claude Code reads the Bearer token from $TOKEN_ENV_VAR when it loads this repository's .mcp.json."
+if [[ -z "${ACTING_FOR_DEMO_TOKEN:-}" ]]; then
+  echo "Set $TOKEN_ENV_VAR to the same value used by DEMO_MCP_BEARER_TOKEN before starting Claude Code."
+else
+  echo "$TOKEN_ENV_VAR is already set in this shell."
+fi
+
+echo
+echo "Then start Claude Code from this repository:"
+echo "  cd \"$ROOT_DIR\""
+echo "  claude"
+echo
+echo "On first use, review/approve the project MCP server when Claude Code asks."
+echo "Inside Claude Code, /mcp shows the server status."
+echo
+echo "Try: 800円の商品を買って"

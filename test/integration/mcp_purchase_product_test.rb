@@ -53,13 +53,30 @@ class McpPurchaseProductTest < ActionDispatch::IntegrationTest
     end
   end
 
-  test "lists purchase_product as the only MCP tool for an authenticated agent" do
+  test "lists product discovery and purchase tools for an authenticated agent" do
     payload = mcp_request(method: "tools/list")
 
     assert_response :success
     tools = payload.fetch("result").fetch("tools")
-    assert_equal ["purchase_product"], tools.map { |tool| tool.fetch("name") }
-    assert_equal ["product_id"], tools.first.fetch("inputSchema").fetch("required")
+    assert_equal ["list_products", "purchase_product"], tools.map { |tool| tool.fetch("name") }
+
+    list_tool = tools.find { |tool| tool.fetch("name") == "list_products" }
+    purchase_tool = tools.find { |tool| tool.fetch("name") == "purchase_product" }
+
+    assert_equal false, list_tool.fetch("inputSchema").fetch("additionalProperties")
+    assert_equal ["product_id"], purchase_tool.fetch("inputSchema").fetch("required")
+  end
+
+  test "list_products exposes trusted product data without authorizing or executing" do
+    assert_no_difference ["Purchase.count", "ActingFor::AuditEvent.count"] do
+      products = call_list_products
+
+      assert_equal [
+        { "id" => @everyday.id, "name" => "Everyday Item", "price" => 800 },
+        { "id" => @approval.id, "name" => "Approval Item", "price" => 2_000 },
+        { "id" => @expensive.id, "name" => "Expensive Item", "price" => 5_000 }
+      ], products
+    end
   end
 
   test "allow executes purchase and records audit through MCP" do
@@ -139,6 +156,20 @@ class McpPurchaseProductTest < ActionDispatch::IntegrationTest
   end
 
   private
+
+  def call_list_products(token: @bearer_token)
+    response_payload = mcp_request(
+      method: "tools/call",
+      params: {
+        name: "list_products",
+        arguments: {}
+      },
+      token:
+    )
+
+    assert_response :success
+    response_payload.fetch("result").fetch("structuredContent").fetch("products")
+  end
 
   def call_purchase_product(product, token: @bearer_token)
     response_payload = mcp_request(

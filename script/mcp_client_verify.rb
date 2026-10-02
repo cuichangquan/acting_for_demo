@@ -4,10 +4,10 @@
 require "mcp"
 require "mcp/client/http"
 
-endpoint, bearer_token, allow_id, approval_id, deny_id = ARGV
+endpoint, bearer_token = ARGV
 
-unless [endpoint, bearer_token, allow_id, approval_id, deny_id].all?
-  warn "Usage: ruby script/mcp_client_verify.rb MCP_URL BEARER_TOKEN ALLOW_PRODUCT_ID APPROVAL_PRODUCT_ID DENY_PRODUCT_ID"
+unless endpoint && bearer_token
+  warn "Usage: ruby script/mcp_client_verify.rb MCP_URL BEARER_TOKEN"
   exit 2
 end
 
@@ -25,18 +25,45 @@ begin
 
   tools = client.tools
   tool_names = tools.map(&:name)
-  raise "Unexpected MCP tools: #{tool_names.inspect}" unless tool_names == ["purchase_product"]
+  expected_tools = ["list_products", "purchase_product"]
+  raise "Unexpected MCP tools: #{tool_names.inspect}" unless tool_names == expected_tools
+
+  list_response = client.call_tool(name: "list_products", arguments: {})
+  list_payload = list_response.dig("result", "structuredContent")
+  raise "Missing list_products structuredContent: #{list_response.inspect}" unless list_payload.is_a?(Hash)
+
+  products = list_payload["products"]
+  raise "Missing products array: #{list_payload.inspect}" unless products.is_a?(Array)
+
+  products_by_price = products.to_h do |product|
+    [Integer(product.fetch("price")), product]
+  end
+
+  expected_products = {
+    800 => "Everyday Item",
+    2_000 => "Approval Item",
+    5_000 => "Expensive Item"
+  }
+
+  expected_products.each do |price, expected_name|
+    product = products_by_price.fetch(price)
+    raise "Unexpected product for price #{price}: #{product.inspect}" unless product.fetch("name") == expected_name
+    puts "MCP discovered product=#{product.fetch("id")}: #{expected_name} / price=#{price}"
+  end
 
   cases = [
-    [allow_id, "allow", "delegation_allowed", true],
-    [approval_id, "require_approval", "delegation_requires_approval", false],
-    [deny_id, "deny", "no_matching_delegation", false]
+    [800, "allow", "delegation_allowed", true],
+    [2_000, "require_approval", "delegation_requires_approval", false],
+    [5_000, "deny", "no_matching_delegation", false]
   ]
 
-  cases.each do |product_id, expected_status, expected_reason, expected_executed|
+  cases.each do |price, expected_status, expected_reason, expected_executed|
+    product = products_by_price.fetch(price)
+    product_id = Integer(product.fetch("id"))
+
     response = client.call_tool(
       name: "purchase_product",
-      arguments: { product_id: Integer(product_id) }
+      arguments: { product_id: }
     )
 
     payload = response.dig("result", "structuredContent")
@@ -58,7 +85,7 @@ begin
     puts "MCP product=#{product_id}: #{expected_status} / #{expected_reason} / executed=#{expected_executed}"
   end
 
-  puts "External MCP client verification with Bearer auth: PASS"
+  puts "External MCP client discovery + purchase verification with Bearer auth: PASS"
 ensure
   transport.close if transport.respond_to?(:close)
 end
