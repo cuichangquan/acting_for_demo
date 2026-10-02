@@ -12,6 +12,7 @@ This document records which ActingFor version or exact commit has been verified 
 | `f1b2d87a635bee8b3b43556079ae6f4decf8774e` | `7578bb541cea5a49e79c1590abcac740e9f65d4b` (`Decision#reason_code` candidate) | PASS (18 runs, 118 assertions, 0 failures, 0 errors, 0 skips; Actions run `36521481895`) | PASS: focused reason_code browser verification completed 2026-09-29 |
 | `b784cd268db72e66626dac4d499891b4809f7969` | RubyGems `acting_for` `0.1.1` | PASS (18 runs, 118 assertions, 0 failures, 0 errors, 0 skips; smoke PASS; Actions run `36528758797`) | Published-gem human rerun not repeated; focused reason_code human browser PASS is preserved from the verified candidate |
 | `a7452eba4da681cc0400c76e2460cddcaaf386ae` | RubyGems `acting_for` `0.1.1` | PASS (29 runs, 182 assertions, 0 failures, 0 errors, 0 skips; smoke PASS; MCP discovery + purchase PASS; Actions run `36859918326`) | NOT YET COMPLETED: local Codex CLI natural-language verification for ¥800 / ¥2,000 / ¥5,000 |
+| `1595c3c61379bdea5ac2dbad44fbd64091f3eb03` | RubyGems `acting_for` `0.1.1` | PASS (AI Agent setup validation + full Demo regression; Actions run `36873062451`) | PASS: local Claude Code natural-language verification completed 2026-10-02; Codex CLI manual verification remains NOT YET COMPLETED |
 
 ## Codex CLI Agent integration verification
 
@@ -69,6 +70,39 @@ $ codex
 ```
 
 The local Agent must discover IDs through `list_products`, must not bypass the Rails host by writing Purchase records directly, and must stop on `require_approval`. Human Approval itself remains outside the current implementation scope.
+
+## Claude Code Agent integration verification
+
+Claude Code support uses the same Rails MCP endpoint and delegated-authorization path as Codex CLI. The repository adds project-scoped `.mcp.json`, `bin/setup_claude`, `CLAUDE.md`, and `docs/CLAUDE_CODE.md`; ActingFor Core remains unchanged.
+
+The combined Codex + Claude setup candidate at revision `1595c3c61379bdea5ac2dbad44fbd64091f3eb03` passed GitHub Actions run `36873062451`. CI validated the Agent setup files, built and prepared the Demo, ran the full Rails integration suite, verified browser smoke, and verified product discovery plus purchase through the official MCP Ruby HTTP client.
+
+Local human verification with real Claude Code was completed on 2026-10-02. The user verified that `/mcp` showed the project `acting-for-demo` server connected with two tools, then ran all three natural-language shopping scenarios:
+
+```text
+> 800円の商品を買って
+  → acting-for-demo called twice
+  → Everyday Item / product_id=1
+  → allow / delegation_allowed
+  → executed=true
+  → Purchase created
+
+> 2000円の商品を買って
+  → acting-for-demo called twice
+  → Approval Item / product_id=2
+  → require_approval / delegation_requires_approval
+  → executed=false
+  → no Purchase
+
+> 5000円の商品を買って
+  → acting-for-demo called twice
+  → Expensive Item / product_id=3
+  → deny / no_matching_delegation
+  → executed=false
+  → no Purchase
+```
+
+Each request used the MCP server twice, consistent with the intended `list_products → purchase_product` flow. Claude Code also stopped on `require_approval` and reported that it did not bypass the Rails host boundary or create a purchase through another path. This is recorded as a **PASS for Claude Code manual Agent verification**. Codex CLI natural-language verification remains separate and is not yet completed.
 
 ## Decision reason_code 0.1.1 release verification
 
@@ -134,11 +168,12 @@ The detailed evidence and classification are recorded in `docs/MANUAL_VERIFICATI
 
 ## Current verification environment
 
-- Latest automated Codex/MCP integration verification date: 2026-10-01
+- Latest automated AI-Agent/MCP integration verification date: 2026-10-01
 - ActingFor: RubyGems 0.1.1
-- Codex/MCP candidate automated integration: PASS — 29 runs / 182 assertions / 0 failures / 0 errors / 0 skips
-- Codex/MCP official-client discovery + purchase verification: PASS
-- Codex/MCP smoke verification: PASS
+- Combined Codex + Claude setup candidate automated verification: PASS — Actions run `36873062451`
+- MCP official-client discovery + purchase verification: PASS
+- MCP smoke verification: PASS
+- Local natural-language Claude Code verification: PASS on 2026-10-02 for ¥800 / ¥2,000 / ¥5,000
 - Local natural-language Codex CLI verification: NOT YET COMPLETED
 - Published-gem reason_code automated integration: PASS — 18 runs / 118 assertions / 0 failures / 0 errors / 0 skips
 - Focused `reason_code` human browser verification: PASS on the pre-release candidate; not repeated after publication
@@ -148,13 +183,13 @@ The detailed evidence and classification are recorded in `docs/MANUAL_VERIFICATI
 - PostgreSQL: 16.15
 - Docker Compose
 - Demo historical behavior baseline and automated regression revision: `32058147b6527ce46486c523e9a8d036760ca372`
-- Codex/MCP integration candidate revision: `a7452eba4da681cc0400c76e2460cddcaaf386ae`
+- AI-Agent/MCP combined candidate revision: `1595c3c61379bdea5ac2dbad44fbd64091f3eb03`
 - Historical human completion: Scenarios 1–11 PASS; Scenarios 7–8 Rails console, Scenarios 9–11 browser workflow
 
 ## Source-of-truth boundary
 
 - Gem behavior, Public API, and Security Contract: `cuichangquan/acting_for`
-- Demo usage, host-integration example, Agent authentication/MCP example, Codex CLI workflow, and manual-verification workflow: `cuichangquan/acting_for_demo`
+- Demo usage, host-integration example, Agent authentication/MCP example, Codex CLI workflow, Claude Code workflow, and manual-verification workflow: `cuichangquan/acting_for_demo`
 - Compatibility history: this document
 
 The demo is an official reference and integration-verification application. It complements, but does not replace, ActingFor core CI. Demo integration tests exercise the gem's public API from a Rails host application and must not depend on `ActingFor::Internal::*` or other internal implementation details.
@@ -183,7 +218,7 @@ Human / assisted verification with provenance recorded
 COMPATIBILITY.md update
 ```
 
-For Agent-integration changes that do not update the ActingFor dependency, record protocol/integration evidence separately from local AI-Agent manual evidence. Do not relabel automated MCP-client verification as a human Codex CLI pass.
+For Agent-integration changes that do not update the ActingFor dependency, record protocol/integration evidence separately from local AI-Agent manual evidence. Do not relabel automated MCP-client verification as a human Agent pass.
 
 The broader release relationship is:
 
