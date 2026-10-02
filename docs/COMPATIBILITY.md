@@ -12,7 +12,8 @@ This document records which ActingFor version or exact commit has been verified 
 | `f1b2d87a635bee8b3b43556079ae6f4decf8774e` | `7578bb541cea5a49e79c1590abcac740e9f65d4b` (`Decision#reason_code` candidate) | PASS (18 runs, 118 assertions, 0 failures, 0 errors, 0 skips; Actions run `36521481895`) | PASS: focused reason_code browser verification completed 2026-09-29 |
 | `b784cd268db72e66626dac4d499891b4809f7969` | RubyGems `acting_for` `0.1.1` | PASS (18 runs, 118 assertions, 0 failures, 0 errors, 0 skips; smoke PASS; Actions run `36528758797`) | Published-gem human rerun not repeated; focused reason_code human browser PASS is preserved from the verified candidate |
 | `a7452eba4da681cc0400c76e2460cddcaaf386ae` | RubyGems `acting_for` `0.1.1` | PASS (29 runs, 182 assertions, 0 failures, 0 errors, 0 skips; smoke PASS; MCP discovery + purchase PASS; Actions run `36859918326`) | NOT YET COMPLETED: local Codex CLI natural-language verification for ¥800 / ¥2,000 / ¥5,000 |
-| `1595c3c61379bdea5ac2dbad44fbd64091f3eb03` | RubyGems `acting_for` `0.1.1` | PASS (AI Agent setup validation + full Demo regression; Actions run `36873062451`) | PASS: local Claude Code natural-language verification completed 2026-10-02; Codex CLI manual verification remains NOT YET COMPLETED |
+| `1595c3c61379bdea5ac2dbad44fbd64091f3eb03` | RubyGems `acting_for` `0.1.1` | PASS (AI Agent setup validation + full Demo regression; Actions run `36873062451`) | PASS: local Claude Code natural-language verification completed 2026-10-02; Codex CLI manual verification remained pending at this revision |
+| `6a97f2986b4a7f708a9e656a2a12f5507632a191` | RubyGems `acting_for` `0.1.1` | PASS (full Demo regression; Actions run `36948328264`) | PASS: local Claude Code and Codex CLI natural-language verification completed 2026-10-02 |
 
 ## Codex CLI Agent integration verification
 
@@ -48,28 +49,35 @@ The integration preserves the authentication/authorization separation: Bearer au
 
 OpenAI's current Codex CLI MCP command shape was checked before implementation. The Demo setup uses a Streamable HTTP MCP URL and `--bearer-token-env-var`, so the token value remains in the user's environment rather than being written into the repository or Codex MCP configuration.
 
-Natural-language Codex CLI verification is intentionally not relabeled as automated evidence. It remains a local manual completion gate. The expected manual checks are:
+Local human verification with real Codex CLI was completed on 2026-10-02. The user verified that `/mcp` showed `acting-for-demo` connected with two tools, then ran all three natural-language shopping scenarios:
 
 ```text
-$ codex
-
 > 800円の商品を買って
   → list_products
+  → Everyday Item / product_id=1
   → purchase_product
-  → ALLOW / executed=true
+  → allow / delegation_allowed
+  → executed=true
+  → Purchase created
 
 > 2000円の商品を買って
   → list_products
+  → Approval Item / product_id=2
   → purchase_product
-  → REQUIRE_APPROVAL / executed=false
+  → require_approval / delegation_requires_approval
+  → executed=false
+  → no Purchase
 
 > 5000円の商品を買って
   → list_products
+  → Expensive Item / product_id=3
   → purchase_product
-  → DENY / executed=false
+  → deny / no_matching_delegation
+  → executed=false
+  → no Purchase
 ```
 
-The local Agent must discover IDs through `list_products`, must not bypass the Rails host by writing Purchase records directly, and must stop on `require_approval`. Human Approval itself remains outside the current implementation scope.
+Codex CLI discovered the real product IDs through `list_products` before every purchase request, did not guess IDs, and stopped on `require_approval`. This is recorded as a **PASS for Codex CLI manual Agent verification**. Human Approval itself remains outside the current implementation scope.
 
 ## Claude Code Agent integration verification
 
@@ -102,7 +110,7 @@ Local human verification with real Claude Code was completed on 2026-10-02. The 
   → no Purchase
 ```
 
-Each request used the MCP server twice, consistent with the intended `list_products → purchase_product` flow. Claude Code also stopped on `require_approval` and reported that it did not bypass the Rails host boundary or create a purchase through another path. This is recorded as a **PASS for Claude Code manual Agent verification**. Codex CLI natural-language verification remains separate and is not yet completed.
+Each request used the MCP server twice, consistent with the intended `list_products → purchase_product` flow. Claude Code also stopped on `require_approval` and reported that it did not bypass the Rails host boundary or create a purchase through another path. This is recorded as a **PASS for Claude Code manual Agent verification**.
 
 ## Decision reason_code 0.1.1 release verification
 
@@ -168,13 +176,13 @@ The detailed evidence and classification are recorded in `docs/MANUAL_VERIFICATI
 
 ## Current verification environment
 
-- Latest automated AI-Agent/MCP integration verification date: 2026-10-01
+- Latest automated AI-Agent/MCP integration verification date: 2026-10-02
 - ActingFor: RubyGems 0.1.1
-- Combined Codex + Claude setup candidate automated verification: PASS — Actions run `36873062451`
+- Combined Codex + Claude setup automated verification: PASS — final recorded run `36948328264`
 - MCP official-client discovery + purchase verification: PASS
 - MCP smoke verification: PASS
 - Local natural-language Claude Code verification: PASS on 2026-10-02 for ¥800 / ¥2,000 / ¥5,000
-- Local natural-language Codex CLI verification: NOT YET COMPLETED
+- Local natural-language Codex CLI verification: PASS on 2026-10-02 for ¥800 / ¥2,000 / ¥5,000
 - Published-gem reason_code automated integration: PASS — 18 runs / 118 assertions / 0 failures / 0 errors / 0 skips
 - Focused `reason_code` human browser verification: PASS on the pre-release candidate; not repeated after publication
 - Historical full v0.1.0 human completion date: 2026-09-23
@@ -183,7 +191,7 @@ The detailed evidence and classification are recorded in `docs/MANUAL_VERIFICATI
 - PostgreSQL: 16.15
 - Docker Compose
 - Demo historical behavior baseline and automated regression revision: `32058147b6527ce46486c523e9a8d036760ca372`
-- AI-Agent/MCP combined candidate revision: `1595c3c61379bdea5ac2dbad44fbd64091f3eb03`
+- AI-Agent/MCP final manual-verification record revision: `6a97f2986b4a7f708a9e656a2a12f5507632a191`
 - Historical human completion: Scenarios 1–11 PASS; Scenarios 7–8 Rails console, Scenarios 9–11 browser workflow
 
 ## Source-of-truth boundary
