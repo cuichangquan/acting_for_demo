@@ -14,6 +14,7 @@ env:
 jobs:
   test:
     runs-on: ubuntu-latest
+    timeout-minutes: 8
     steps:
       - name: Checkout Demo
         uses: actions/checkout@v6
@@ -41,10 +42,11 @@ jobs:
       - name: Prepare Demo databases
         run: docker compose run --rm app bin/setup --skip-server
 
-      - name: Show installed ActingFor version
+      - name: Verify installed ActingFor version
         run: |
           docker compose run --rm app ruby -e '
             require "acting_for"
+            abort "Expected ActingFor 0.1.2, got #{ActingFor::VERSION}" unless ActingFor::VERSION == "0.1.2"
             puts "ActingFor version: #{ActingFor::VERSION}"
           '
 

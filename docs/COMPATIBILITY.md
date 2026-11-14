@@ -1,6 +1,20 @@
 # ActingFor Demo Compatibility
 
-This document records which ActingFor version or exact commit has been verified with this demo application. ActingFor 0.1.1 is released on RubyGems. Historical exact-Git and release-candidate evidence is preserved below separately from the current released-gem integration evidence.
+This document records which ActingFor version or exact commit has been verified with this demo application. The current dependency is released RubyGems `acting_for 0.1.2`. Historical exact-Git and release-candidate evidence is preserved below.
+
+## Current dependency: ActingFor 0.1.2
+
+- Core release source: [`adce638556e8e8b5a048fbd7241cd9df2808db7b`](https://github.com/cuichangquan/acting_for/commit/adce638556e8e8b5a048fbd7241cd9df2808db7b).
+- Published gem: `acting_for-0.1.2.gem`, 16,384 bytes.
+- Published SHA256: `ac2b5ceb93aa3896aab9891bca73424d808629ec3e3109e7fd3d2313f63fdaab`; this is also the checksum recorded in `Gemfile.lock`.
+
+The 0.1.2 fix enforces exact Symbol-key matching for authorization Context. `ShoppingAgentPurchase` already supplies a trusted ordinary Hash (`{ amount: product.price }`), so this dependency update does not change the Demo's purchase, approval-required, or denial flows.
+
+[Demo CI](https://github.com/cuichangquan/acting_for_demo/actions/workflows/ci.yml) checks the installed ActingFor version, the full host integration suite, browser HTTP smoke, and product discovery plus purchase through the official MCP HTTP client. Each CI job is limited to eight minutes.
+
+Human browser and natural-language Codex CLI / Claude Code verification has not been repeated for 0.1.2. The 0.1.1 human verification below remains historical evidence, not a new human verification claim for 0.1.2.
+
+## Historical integration verification records
 
 | Demo revision | ActingFor source | Automated verification | Human Manual Verification |
 | --- | --- | --- | --- |
@@ -17,7 +31,7 @@ This document records which ActingFor version or exact commit has been verified 
 
 ## Codex CLI Agent integration verification
 
-The Codex CLI integration candidate is implemented on `feature/codex-cli-agent-demo`, based on Demo `main` revision `803eb784f95a4f9ee8e4626b6295d427d5c3ede9`. ActingFor Core is unchanged; the Demo continues to resolve released RubyGems `acting_for 0.1.1`.
+The Codex CLI integration candidate was implemented on `feature/codex-cli-agent-demo`, based on Demo `main` revision `803eb784f95a4f9ee8e4626b6295d427d5c3ede9`. That integration left ActingFor Core unchanged and used released RubyGems `acting_for 0.1.1`.
 
 Automated verification ran against feature revision `a7452eba4da681cc0400c76e2460cddcaaf386ae` in GitHub Actions run `36859918326` and passed:
 
