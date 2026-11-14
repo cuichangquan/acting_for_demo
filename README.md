@@ -2,7 +2,7 @@
 
 This is the official hands-on reference application for [ActingFor](https://github.com/cuichangquan/acting_for). It shows how ActingFor's public API fits into a real Rails host application and provides automated integration verification plus an environment for human manual verification.
 
-> **Verification note:** ActingFor 0.1.1 is published on RubyGems. The demo verifies the released `Decision#reason_code` Public API and includes an authenticated MCP Streamable HTTP path that can be used directly from Codex CLI or Claude Code.
+> **Released dependency:** ActingFor 0.1.2 is published on RubyGems. It fixes exact Symbol-key matching for authorization Context. The demo already builds trusted Context as a plain Hash with Symbol keys, exercises the `Decision#reason_code` Public API, and includes an authenticated MCP Streamable HTTP path that can be used directly from Codex CLI or Claude Code. See [Compatibility](docs/COMPATIBILITY.md) for verification records.
 
 ## Repository responsibilities
 
@@ -371,10 +371,10 @@ Rails executes the business action only after authorization.
 The demo uses the released RubyGems dependency:
 
 ```ruby
-gem "acting_for", "~> 0.1.1"
+gem "acting_for", "~> 0.1.2"
 ```
 
-`Gemfile.lock` resolves `acting_for 0.1.1` from RubyGems and records the published gem checksum. The earlier exact-Git candidate dependency was used only for pre-release verification and is preserved in `docs/COMPATIBILITY.md` as historical evidence.
+`Gemfile.lock` resolves `acting_for 0.1.2` from RubyGems and records the published gem checksum. The earlier exact-Git candidate dependency was used only for pre-release verification and is preserved in `docs/COMPATIBILITY.md` as historical evidence.
 
 ## More documentation
 
