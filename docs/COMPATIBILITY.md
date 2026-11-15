@@ -14,6 +14,34 @@ The 0.1.2 fix enforces exact Symbol-key matching for authorization Context. `Sho
 
 Human browser and natural-language Codex CLI / Claude Code verification has not been repeated for 0.1.2. The 0.1.1 human verification below remains historical evidence, not a new human verification claim for 0.1.2.
 
+## Rails 8.1.4.1 migration verification (2026-11-16 JST)
+
+This maintenance update pins Rails to `8.1.4.1` while keeping released RubyGems `acting_for 0.1.2`, `config.load_defaults 8.0`, and the existing `json < 3` boundary. It does not change ActingFor Core, host authorization code, Dockerfile/Compose configuration, or CI workflows. The upgrade candidate was based on Demo [`2e0d0eafb2830b2887bce98d05893014ea3bdc98`](https://github.com/cuichangquan/acting_for_demo/commit/2e0d0eafb2830b2887bce98d05893014ea3bdc98).
+
+### Actual Docker Compose verification
+
+The repository's Dockerfile and Compose services were tested on an Apple Silicon Mac in a fresh, dedicated Compose project. A local-only override restricted resources, removed the database host port, and bound the application to a unique loopback port; it is not part of the repository. No existing project containers or volumes were reused.
+
+- Docker Engine 29.9.2 / Docker Compose 5.6.1
+- Container runtime: Ruby 3.4.10, `aarch64-linux`, Rails 8.1.4.1, ActingFor 0.1.2, PostgreSQL 16.15
+- `docker compose build`: PASS
+- `docker compose run --rm app bin/setup --skip-server`: PASS
+- `docker compose run --rm app bin/rails test`: PASS, **29 runs / 182 assertions / 0 failures / 0 errors / 0 skips**
+- `docker compose run --rm app bin/rails zeitwerk:check`: PASS
+- Application HTTP smoke: PASS (200)
+- Official MCP Ruby HTTP client, including `list_products` before `purchase_product`: PASS
+  - ¥800: `allow / delegation_allowed / executed=true`
+  - ¥2,000: `require_approval / delegation_requires_approval / executed=false`
+  - ¥5,000: `deny / no_matching_delegation / executed=false`
+
+The dedicated test containers were stopped after verification. No software was installed directly on the Mac.
+
+### Additional compatibility evidence and limits
+
+An isolated native Linux x86_64 run with Ruby 3.4.12 and PostgreSQL 16.15 also passed the same 29-test / 182-assertion suite, eager loading, HTTP smoke, and official MCP discovery/purchase checks. The published ActingFor 0.1.2 gem matched the SHA256 recorded above. An exploratory run with `config.load_defaults 8.1` passed the same test count, but that setting was restored to `8.0` to keep behavior changes out of this dependency-only migration.
+
+These are automated integration and smoke results, not a new human browser or natural-language Codex CLI / Claude Code verification. Those manual scenarios have **not been repeated** for this Rails update. The existing Demo CI remains the separate Docker/Linux verification gate; its PR run and exact-head review must be checked before merging. Rails 8.1 default adoption and removal of the JSON compatibility bound are separate follow-up decisions.
+
 ## Historical integration verification records
 
 | Demo revision | ActingFor source | Automated verification | Human Manual Verification |
@@ -188,7 +216,7 @@ The repository commit immediately before the completion record, `073a97f3c350c7c
 
 The detailed evidence and classification are recorded in `docs/MANUAL_VERIFICATION.md`.
 
-## Current verification environment
+## Historical verification environment (2026-10-02)
 
 - Latest automated AI-Agent/MCP integration verification date: 2026-10-02
 - ActingFor: RubyGems 0.1.1
@@ -223,7 +251,7 @@ If demo integration reveals a bug or API problem, treat it as feedback for an Ac
 For released v0.1.x integration, use the RubyGems version requirement:
 
 ```ruby
-gem "acting_for", "~> 0.1.1"
+gem "acting_for", "~> 0.1.2"
 ```
 
 For an unreleased future release-candidate verification pass, an exact Git commit may be used temporarily and must be recorded explicitly in this file.

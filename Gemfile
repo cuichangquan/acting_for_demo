@@ -1,10 +1,10 @@
 source "https://rubygems.org"
 
 # Bundle edge Rails instead: gem "rails", github: "rails/rails", branch: "main"
-gem "rails", "~> 8.0.5", ">= 8.0.5.1"
+gem "rails", "= 8.1.4.1"
 gem "acting_for", "~> 0.1.2"
 gem "mcp", "~> 1.6.1"
-# Rails 8.0 uses JSON APIs removed in JSON 3.
+# Keep the existing JSON 2 compatibility boundary during the Rails upgrade.
 gem "json", "< 3"
 # The modern asset pipeline for Rails [https://github.com/rails/propshaft]
 gem "propshaft"
