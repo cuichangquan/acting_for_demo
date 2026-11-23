@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1.7
-FROM ruby:3.4.10-slim
+FROM ruby:3.4.13-slim
 
 ENV APP_HOME=/rails \
     BUNDLE_JOBS=4 \

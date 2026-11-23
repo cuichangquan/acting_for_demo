@@ -186,7 +186,7 @@ The full design and security boundary are documented in [MCP + Bearer Agent Auth
 - Git
 - Codex CLI or Claude Code only for the optional real-Agent hands-on flows
 
-Ruby, Rails, Bundler gems, and PostgreSQL run inside Docker. They are not required on the Mac host. The images use Ruby 3.4.10, Rails 8.1.4.1, and PostgreSQL 16.
+Ruby, Rails, Bundler gems, and PostgreSQL run inside Docker. They are not required on the Mac host. The images use Ruby 3.4.13, Rails 8.1.4.1, and PostgreSQL 16.
 
 ## Quick Start
 
